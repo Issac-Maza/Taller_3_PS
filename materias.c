@@ -80,5 +80,11 @@ void editarMateria() {
 	fclose(temp);
 
 	remove("archivos/materias.txt");
-	rename("archivos/temp.txt", "data/materias.txt");
+	rename("archivos/temp.txt", "archivos/materias.txt");
+
+	if(encontrado) {
+		printf("La materia se ha actualizado con exito.\n");
+	} else {
+		printf("Materia no encontrada.\n");
+	}
 }
