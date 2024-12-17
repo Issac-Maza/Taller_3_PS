@@ -1,5 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "utilidades.h"
+#include "estudiantes.h"
+#include "profesores.h"
+#include "materias.h"
+#include "cursos.h"
 
 void mostrarMenu() {
 	printf("\n  MENU PRINCIPAL   \n");
