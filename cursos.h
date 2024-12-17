@@ -3,5 +3,6 @@
 
 void gestionarCursos(void);
 void crearCurso(void);
+void editarCurso(void);
 
 #endif

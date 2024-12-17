@@ -3,5 +3,6 @@
 
 void gestionarProfesores(void);
 void crearProfesor(void);
+void editarProfesor(void);
 
 #endif

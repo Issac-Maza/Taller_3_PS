@@ -3,6 +3,6 @@
 
 void gestionarMaterias(void);
 void crearMateria(void);
+void editarMateria(void);
 
 #endif
-

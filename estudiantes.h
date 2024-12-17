@@ -3,5 +3,6 @@
 
 void gestionarEstudiantes(void);
 void crearEstudiante(void);
+void editarEstudiante(void);
 
 #endif
