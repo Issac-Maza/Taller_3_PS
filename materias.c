@@ -4,97 +4,127 @@
 #include "materias.h"
 #include "utilidades.h"
 
-void gestionMaterias() {
-	int opcion;
-	printf("\n--- ADMINISTRACION DE MATERIAS ---\n");
-	printf("1. Crear Materia\n");
-	printf("2. Editar Materia\n");
-	printf("Escoja una opción: ");
-	scanf("%d", &opcion);
-	limpiarBuffer();
-
-	switch(opcion) {
-		case 1:
-			crearMateria();
-			break;
-		case 2:
-			editarMateria();
-			break;
-		deafult:
-			printf("Opcion no valida\n");
-			break;
-	}
-}
-
-void crearMateria() {
-	Materia newMateria;
-	FILE *archivo = fopen("archivos/materias.txt", "a+");
-
-	if(!archivo) {
-		printf("Error al abrir o encontrar el archivo\n");
+void cargarDatosMaterias(Materia **materias, int *cantidad) {
+	FILE *archivo = fopen("archivos/materias.txt", "r");
+	if (!archivo) {
+		printf("Error al abrir el archivo de materias.\n");
 		return;
 	}
 
-	printf("Ingrese nombre de la materia: ");
-	fgets(newMateria.nombre, sizeof(newMateria.nombre), stdin);
-	strtok(newMateria.nombre, "\n");
+	*cantidad = 0;
+	*materias = NULL;
+	Materia temp;
 
-	printf("Ingrese el codigo de la Materia: ");
-	fgets(newMateria.codigo, sizeof(newMateria.codigo), stdin);
-	strtok(newMateria.codigo, "\n");
+	while (fscanf(archivo, "%[^-]-%[^-]-%[^]\n", temp.codigo, temp.nombre, temp.estado) != EOF) {
+		*materias = realloc(*materias, (*cantidad + 1) * sizeof(Materia));
+		(*materias)[*cantidad] = temp;
+		(*cantidad)++;
+	}
+	fclose(archivo);
+}
 
-	if (verificarUnicidadMateria(newMateria.codigo)) {
-       		printf("Error: El código de la materia ya existe.\n");
-        	fclose(archivo);
-        	return;
+void guardarDatosMaterias(Materia *materias, int cantidad) {
+	FILE *archivo = fopen("archivos/materias.txt", "w");
+	if (!archivo) {
+		printf("Error al abrir el archivo de materias para guardar.\n");
+		return;
 	}
 
-	strcpy(nuevaMateria.estado, "Activo");
-
-	fprintf(archivo, "%s-%s-%s\n", nuevaMateria.nombre, nuevaMateria.codigo, nuevaMateria.estado);
+	for (int i = 0; i < cantidad; i++) {
+		fprintf(archivo, "%s-%s-%s\n", materias[i].codigo, materias[i].nombre, materias[i].estado);
+	}
 	fclose(archivo);
+}
+
+void gestionMaterias(Materia **materias, int *cantidad) {
+	int opcion;
+	do {
+		printf("\n--- GESTIÓN DE MATERIAS ---\n");
+        	printf("1. Crear Materia\n");
+        	printf("2. Editar Materia\n");
+        	printf("3. Mostrar Materias\n");
+        	printf("4. Volver al menú principal\n");
+        	printf("Seleccione una opción: ");
+        	scanf("%d", &opcion);
+		limpiarBuffer();
+
+		switch (opcion) {
+			case 1:
+				crearMateria(materias, cantidad);
+				break;
+			case 2:
+				editarMateria(*materias, *cantidad);
+				break;
+			case 3:
+				mostrarMaterias(*materias, *cantidad);
+				break;
+			case 4:
+                		printf("Volviendo al menú principal...\n");
+                		break;
+            		default:
+                		printf("Opción inválida. Intente de nuevo.\n");
+        	}
+	} while (opcion != 4)
+}
+
+void crearMateria(Materia **materias, int *cantidad) {
+	Materia nuevaMateria;
+
+    	printf("Ingrese el código de la materia: ");
+    	fgets(nuevaMateria.codigo, sizeof(nuevaMateria.codigo), stdin);
+    	strtok(nuevaMateria.codigo, "\n");
+
+    	if (verificarUnicidadMateria(nuevaMateria.codigo)) {
+        	printf("Error: El código de la materia ya existe.\n");
+        	return;
+    	}
+
+    	printf("Ingrese el nombre de la materia: ");
+    	fgets(nuevaMateria.nombre, sizeof(nuevaMateria.nombre), stdin);
+    	strtok(nuevaMateria.nombre, "\n");
+
+    	strcpy(nuevaMateria.estado, "Activo");
+
+    	*materias = realloc(*materias, (*cantidad + 1) * sizeof(Materia));
+    	(*materias)[*cantidad] = nuevaMateria;
+    	(*cantidad)++;
 
 	printf("Materia creada exitosamente.\n");
 }
 
-void editarMateria() {
+void editarMateria(Materia *materias, int cantidad) {
 	char codigo[20];
-	printf("Ingrese el codigo(unico) de la materia que quiere editar");
-	fgets(codigo, sizeof(codigo), stdin);
-	strtok(codigo, "\n");
+    	int encontrado = 0;
 
-	FILE *archivo = fopen("archivos/materias.txt", "r+");
-	FILE *temporal = fopen("archivos/temporal.txt", "w+");
+    	printf("Ingrese el código de la materia a editar: ");
+    	fgets(codigo, sizeof(codigo), stdin);
+    	strtok(codigo, "\n");
 
-	if(!archivo || !temporal){
-		printf("Error al abrir o encontrar los archivos");
-		return;
-	}
+    	for (int i = 0; i < cantidad; i++) {
+        	if (strcmp(materias[i].codigo, codigo) == 0) {
+            		printf("Materia encontrada: %s - %s\n", materias[i].codigo, materias[i].nombre);
 
-	Materia materia;
-	int encontrado = 0;
+            		printf("Ingrese el nuevo estado (Activo/Inactivo): ");
+            		fgets(materias[i].estado, sizeof(materias[i].estado), stdin);
+            		strtok(materias[i].estado, "\n");
 
-	while (fscanf(archivo, "%[^-]-%[^-]-%[^\n]\n", materia.nombre, materia.codigo, materia.estado) != EOF) {
-        	if (strcmp(materia.codigo, codigo) == 0) {
+            		printf("Materia actualizada correctamente.\n");
             		encontrado = 1;
-            		printf("Materia encontrada. Cambiar estado (Activo/Inactivo): ");
-            		ffgets(materia.estado, sizeof(materia.estado), stdin);
-			strtok(materia.estado, "\n");
+           		break;
         	}
-        	fprintf(temp, "%s-%s-%s\n", materia.nombre, materia.codigo, materia.estado);
     	}
 
-	fclose(archivo);
-	fclose(temp);
+    	if (!encontrado) {
+        	printf("Materia no encontrada.\n");
+    	}
+}
 
-	remove("archivos/materias.txt");
-	rename("archivos/temporal.txt", "archivos/materias.txt");
-
-	if(encontrado) {
-		printf("La materia se ha actualizado con exito.\n");
-	} else {
-		printf("Materia no encontrada.\n");
-	}
+void mostrarMaterias(Materia *materias, int cantidad) {
+    	printf("\n--- LISTA DE MATERIAS ---\n");
+    	for (int i = 0; i < cantidad; i++) {
+        	printf("Código: %s - Nombre: %s - Estado: %s\n",
+		materias[i].codigo, materias[i].nombre, materias[i].estado);
+    	}
 }
 
 int verificarUnicidadMateria(const char *codigo) {
@@ -115,4 +145,8 @@ int verificarUnicidadMateria(const char *codigo) {
 
 	fclose(archivo);
 	return 0;
+}
+
+void liberarMemoriaMaterias(Materia *materias, int cantidad) {
+    free(materias);
 }

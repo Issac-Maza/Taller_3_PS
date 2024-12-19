@@ -10,9 +10,13 @@ typedef struct {
 	char estado[10];
 } Estudiante;
 
-void gestionarEstudiantes(void);
-void crearEstudiante(void);
-void editarEstudiante(void);
+void cargarDatosEstudiantes(Estudiante **estudiantes, int *cantidad);
+void guardarDatosEstudiantes(Estudiante *estudiantes, int cantidad);
+void gestionarEstudiantes(Estudiante **estudiantes, int *cantidad);
+void crearEstudiante(Estudiante **estudiantes, int *cantidad);
+void editarEstudiante(Estudiante *estudiantes, int cantidad);
+void mostrarEstudiantes(Estudiante *estudiantes, int cantidad);
+void liberarMemoriaEstudiantes(Estudiante *estudiantes, int cantidad);
 int verificarUnicidadEstudiante(const char *matricula, const char *usuario);
 
 #endif

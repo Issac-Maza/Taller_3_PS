@@ -1,6 +1,5 @@
 #ifndef PROFESORES_H
 #define PROFESORES_H
-#define TAM_LINEA 500
 
 typedef struct {
 	char nombre[100];
@@ -9,12 +8,18 @@ typedef struct {
 	char usuario[50];
 	char clave[50];
 	char estado[10];
-	char materias[200];
+	char **materias[200];
+	int cantidadMaterias;
 } Profesor;
 
-void gestionarProfesores(void);
-void crearProfesor(void);
-void editarProfesor(void);
-int verificarUnicidadProfesor(const char *cc, const char *usuario);
+void cargarDatosProfesores(Profesor **profesores, int *cantidad);
+void guardarDatosProfesores(Profesor *profesores, int cantidad);
+void gestionarProfesores(Profesor **profesores, int *cantidad);
+void crearProfesor(Profesor **profesores, int *cantidad);
+void editarProfesor(Profesor *profesores, int cantidad);
+void mostrarProfesores(Profesor *profesores, int cantidad);
+void liberarMemoriaProfesores(Profesor *profesores, int cantidad);
+int verificarUnicidadProfesor(Profesor *profesores, int cantidad, const char *cc, const char *usuario);
+int verificarMateriaDuplicada(char **materiasLista, int cantidadMaterias, const char *materia);
 
 #endif
