@@ -5,7 +5,7 @@
 #include "cursos.h"
 #include "utilidades.h"
 
-void cargarDatosProfesores(Profesor **profesores, int *cantidad, Materia *materias, int cantidadMaterias) {
+void cargarDatosProfesores(Profesor **profesores, int *cantidad) {
     	FILE *archivo = fopen("archivos/profesores.txt", "r");
     	if (!archivo) {
         	printf("Error al abrir archivo de profesores.\n");
@@ -15,30 +15,27 @@ void cargarDatosProfesores(Profesor **profesores, int *cantidad, Materia *materi
     	*cantidad = 0;
     	*profesores = NULL;
     	Profesor temp;
+    	char materiasBuffer[500];
 
-    	while (fscanf(archivo, "%[^-]-%[^-]-%[^-]-%[^-]-%[^-]-%[^-]-%[^\n]\n", 
-		temp.nombre, temp.apellidos, temp.cedula, temp.usuario, temp.clave, temp.estado, temp.materiasLista) != EOF) {
+    	while (fscanf(archivo, "%[^-]-%[^-]-%[^-]-%[^-]-%[^-]-%[^-]-%[^\n]\n", temp.nombre, temp.apellidos, temp.cedula, temp.usuario, temp.clave, temp.estado, materiasBuffer) != EOF) {
 
-		temp.materiasLista = NULL;
-		temp.cantidadMaterias = 0;
+        	temp.materiasLista = NULL;
+        	temp.cantidadMaterias = 0;
 
-		char *materiaToken = strtok(temp.materiasLista, "/");
-		while (materiaToken != NULL) {
-			if (!verificarMateriaDuplicada(temp.materiasLista, temp.cantidadMaterias, materiaToken)) {
-				temp.materiasLista = realloc(temp.materiasLista, (temp.cantidadMaterias + 1) * sizeof(char *));
-				temp.materiasLista[temp.cantidadMaterias] = malloc(strlen(materiaToken) + 1);
-				strcpy(temp.materiasLista[temp.cantidadMaterias], materiaToken);
-				temp.cantidadMaterias++;
-			}
-			materiaToken = strtok(NULL, "/");
-		}
+        	char *materiaToken = strtok(materiasBuffer, "/");
+        	while (materiaToken != NULL) {
+            		temp.materiasLista = realloc(temp.materiasLista, (temp.cantidadMaterias + 1) * sizeof(char *));
+            		temp.materiasLista[temp.cantidadMaterias] = malloc(strlen(materiaToken) + 1);
+            		strcpy(temp.materiasLista[temp.cantidadMaterias], materiaToken);
+            		temp.cantidadMaterias++;
+            		materiaToken = strtok(NULL, "/");
+        	}
 
-		*profesores = realloc(*profesores, (*cantidad + 1) * sizeof(Profesor));
-		(*profesores)[*cantidad] = temp;
-		(*cantidad)++;
-	}
-
-	fclose(archivo);
+        	*profesores = realloc(*profesores, (*cantidad + 1) * sizeof(Profesor));
+        	(*profesores)[*cantidad] = temp;
+        	(*cantidad)++;
+    	}
+    	fclose(archivo);
 }
 
 void guardarDatosProfesores(Profesor *profesores, int cantidad) {
@@ -49,23 +46,20 @@ void guardarDatosProfesores(Profesor *profesores, int cantidad) {
     	}
 
     	for (int i = 0; i < cantidad; i++) {
-        	fprintf(archivo, "%s-%s-%s-%s-%s-%s", 
-			profesores[i].nombre, profesores[i].apellidos, profesores[i].cedula, 
-			profesores[i].usuario, profesores[i].clave, profesores[i].estado);
+        	fprintf(archivo, "%s-%s-%s-%s-%s-%s", profesores[i].nombre, profesores[i].apellidos, profesores[i].cedula, profesores[i].usuario, profesores[i].clave, profesores[i].estado);
 
-		for (int j = 0; j < profesores[i].cantidadMaterias; j++) {
-			fprintf(archivo, "%s%s", profesores[i].materiasLista[j], 
-				(j == profesores[i].cantidadMaterias - 1) ? "" : "/");
-		}
-		fprintf(archivo, "\n");
-	}
+        	for (int j = 0; j < profesores[i].cantidadMaterias; j++) {
+            		fprintf(archivo, "%s%s", profesores[i].materiasLista[j], (j == profesores[i].cantidadMaterias - 1) ? "" : "/");
+        	}
+        	fprintf(archivo, "\n");
+    	}
 
-    fclose(archivo);
+    	fclose(archivo);
 }
 
-void gestionarProfesores(Profesor **profesores, int *cantidad, Materia *materias, int cantidadMaterias) {
-	int opcion;
-	do {
+void gestionarProfesores(Profesor **profesores, int *cantidad, Materia *materias, int cantidadMaterias, struct Curso *cursos, int cantidadCursos) {
+    	int opcion;
+    	do {
         	printf("\n--- GESTIÓN DE PROFESORES ---\n");
         	printf("1. Crear Profesor\n");
         	printf("2. Editar Profesor\n");
@@ -77,10 +71,10 @@ void gestionarProfesores(Profesor **profesores, int *cantidad, Materia *materias
 
         	switch (opcion) {
             		case 1:
-                		crearProfesor(profesores, cantidad);
+                		crearProfesor(profesores, cantidad, materias, cantidadMaterias);
                 		break;
             		case 2:
-                		editarProfesor(*profesores, *cantidad);
+                		editarProfesor(*profesores, *cantidad, cursos, cantidadCursos);
                 		break;
             		case 3:
                 		mostrarProfesores(*profesores, *cantidad);
@@ -106,10 +100,10 @@ void crearProfesor(Profesor **profesores, int *cantidad, Materia *materias, int 
     	strtok(nuevoProfesor.apellidos, "\n");
 
     	printf("Ingrese la C.C. del profesor: ");
-    	fgets(nuevoProfesor.cedula, sizeof(nuevoProfesor.cc), stdin);
+    	fgets(nuevoProfesor.cedula, sizeof(nuevoProfesor.cedula), stdin);
     	strtok(nuevoProfesor.cedula, "\n");
 
-    	if (verificarUnicidadProfesor(*profesores, *cantidad, nuevoProfesor.cc, nuevoProfesor.usuario)) {
+    	if (verificarUnicidadProfesor(*profesores, *cantidad, nuevoProfesor.cedula, nuevoProfesor.usuario)) {
         	printf("Error: El profesor ya existe.\n");
         	return;
     	}
@@ -130,7 +124,7 @@ void crearProfesor(Profesor **profesores, int *cantidad, Materia *materias, int 
     	int agregarMas;
     	do {
         	char codigoMateria[20];
-        	printf("Ingrese el código de la materia a asignar (Ej: MAT001): ");
+        	printf("Ingrese el código de la materia a asignar: ");
         	fgets(codigoMateria, sizeof(codigoMateria), stdin);
         	strtok(codigoMateria, "\n");
 
@@ -139,9 +133,9 @@ void crearProfesor(Profesor **profesores, int *cantidad, Materia *materias, int 
         	} else if (verificarMateriaDuplicada(nuevoProfesor.materiasLista, nuevoProfesor.cantidadMaterias, codigoMateria)) {
             		printf("Error: El profesor ya tiene esta materia asignada.\n");
         	} else {
-            		nuevoProfesor.materiasLista = realloc(nuevoProfesor.materiasLista, 
-				(nuevoProfesor.cantidadMaterias + 1) * sizeof(char *));
-            		nuevoProfesor.materiasLista[nuevoProfesor.cantidadMaterias] = strdup(codigoMateria);
+            		nuevoProfesor.materiasLista = realloc(nuevoProfesor.materiasLista, (nuevoProfesor.cantidadMaterias + 1) * sizeof(char *));
+            		nuevoProfesor.materiasLista[nuevoProfesor.cantidadMaterias] = malloc(strlen(codigoMateria) + 1);
+            		strcpy(nuevoProfesor.materiasLista[nuevoProfesor.cantidadMaterias], codigoMateria);
             		nuevoProfesor.cantidadMaterias++;
             		printf("Materia asignada correctamente.\n");
         	}
@@ -178,8 +172,8 @@ void editarProfesor(Profesor *profesores, int cantidad, struct Curso *cursos, in
             		}
 
             		printf("Ingrese la nueva clave: ");
-			fgets(profesores[i].clave, sizeof(profesores[i].clave), stdin);
-			strtok(profesores[i].clave, "\n");
+            		fgets(profesores[i].clave, sizeof(profesores[i].clave), stdin);
+            		strtok(profesores[i].clave, "\n");
 
             		printf("Ingrese el nuevo estado (Activo/Inactivo): ");
             		char nuevoEstado[10];
@@ -198,6 +192,7 @@ void editarProfesor(Profesor *profesores, int cantidad, struct Curso *cursos, in
     	printf("Profesor no encontrado.\n");
 }
 
+
 void mostrarProfesores(Profesor *profesores, int cantidad) {
     	printf("\n--- LISTA DE PROFESORES ---\n");
     	for (int i = 0; i < cantidad; i++) {
@@ -210,10 +205,10 @@ void mostrarProfesores(Profesor *profesores, int cantidad) {
 int verificarUnicidadProfesor(Profesor *profesores, int cantidad, const char *cedula, const char *usuario) {
     	for (int i = 0; i < cantidad; i++) {
         	if (strcmp(profesores[i].cedula, cedula) == 0 || strcmp(profesores[i].usuario, usuario) == 0) {
-            		return 1;  
+            		return 1;
         	}
     	}
-    	return 0;  
+    	return 0;
 }
 
 int verificarMateriaExistente(const char *codigoMateria, Materia *materias, int cantidadMaterias) {
@@ -228,7 +223,7 @@ int verificarMateriaExistente(const char *codigoMateria, Materia *materias, int 
 int verificarMateriaDuplicada(char **materiasLista, int cantidadMaterias, const char *materia) {
     	for (int i = 0; i < cantidadMaterias; i++) {
         	if (strcmp(materiasLista[i], materia) == 0) {
-            		return 1;  
+            		return 1;
         	}
     	}
     	return 0;
