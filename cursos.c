@@ -4,7 +4,6 @@
 #include "cursos.h"
 #include "materias.h"
 #include "profesores.h"
-#include "estudiantes.h"
 #include "utilidades.h"
 
 void cargarDatosCursos(Curso **cursos, int *cantidad) {
@@ -19,8 +18,8 @@ void cargarDatosCursos(Curso **cursos, int *cantidad) {
     	Curso temp;
 
     	while (fscanf(archivo, "%[^-]-%[^-]-%[^-]-%[^-]-%[^-]-%[^]\n", 
-		temp.codigo, temp.materia, temp.profesor, temp.fechaInicio, temp.fechaFin, temp.estudiantesLista[0]) != EOF) {
-        	*cursos = realloc(*cursos, (*cantidad + 1) * sizeof(Curso));
+		temp.codigo, temp.materia, temp.profesorCedula, temp.fechaInicio, temp.fechaFin, temp.estudiantesLista[0]) != EOF) {
+
         	temp.cantidadEstudiantes = 0;
 
         	char *estudianteToken = strtok(temp.estudiantesLista[0], "/");
@@ -30,6 +29,7 @@ void cargarDatosCursos(Curso **cursos, int *cantidad) {
             		estudianteToken = strtok(NULL, "/");
         	}
 
+		*cursos = realloc(*cursos, (*cantidad + 1) * sizeof(Curso));
         	(*cursos)[*cantidad] = temp;
         	(*cantidad)++;
     	}
@@ -45,7 +45,8 @@ void guardarDatosCursos(Curso *cursos, int cantidad) {
 
     	for (int i = 0; i < cantidad; i++) {
         	fprintf(archivo, "%s-%s-%s-%s-%s-", 
-			cursos[i].codigo, cursos[i].materia, cursos[i].profesor, cursos[i].fechaInicio, cursos[i].fechaFin);
+			cursos[i].codigo, cursos[i].materia, cursos[i].profesorCedula, 
+			cursos[i].fechaInicio, cursos[i].fechaFin);
 
         	for (int j = 0; j < cursos[i].cantidadEstudiantes; j++) {
             		fprintf(archivo, "%s%s", cursos[i].estudiantesLista[j], 
@@ -111,10 +112,10 @@ void crearCurso(Curso **cursos, int *cantidad, Estudiante *estudiantes, int cant
     	}
 
     	printf("Ingrese la C.C.(CEDULA) del profesor: ");
-    	fgets(nuevoCurso.profesor, sizeof(nuevoCurso.profesor), stdin);
-    	strtok(nuevoCurso.profesor, "\n");
+    	fgets(nuevoCurso.profesorCedula, sizeof(nuevoCurso.profesorCedula), stdin);
+    	strtok(nuevoCurso.profesorCedula, "\n");
 
-    	if (!verificarRelacionProfesor(nuevoCurso.profesor, profesores, cantidadProfesores)) {
+    	if (!verificarRelacionProfesor(nuevoCurso.profesorCedula, profesores, cantidadProfesores)) {
         	printf("Error: Profesor no encontrado.\n");
         	return;
     	}
@@ -272,5 +273,5 @@ int verificarCursosAsignados(const Curso *cursos, int cantidadCursos, const char
 }
 
 int verificarMaxEstudiantes(int cantidadEstudiantes) {
-    	return cantidadEstudiantes >= MAX_ESTUDIANTES;
+    	return cantidadEstudiantes >= 30;
 }

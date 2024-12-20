@@ -2,7 +2,6 @@
 #include <stdlib.h>
 #include <string.h>
 #include "profesores.h"
-#include "materias.h"
 #include "cursos.h"
 #include "utilidades.h"
 
