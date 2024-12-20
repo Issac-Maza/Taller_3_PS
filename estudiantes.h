@@ -16,7 +16,7 @@ void gestionarEstudiantes(Estudiante **estudiantes, int *cantidad);
 void crearEstudiante(Estudiante **estudiantes, int *cantidad);
 void editarEstudiante(Estudiante *estudiantes, int cantidad);
 void mostrarEstudiantes(Estudiante *estudiantes, int cantidad);
+int verificarUnicidadEstudiante(const char *matricula, Estudiante *estudiantes, int cantidad);
 void liberarMemoriaEstudiantes(Estudiante *estudiantes, int cantidad);
-int verificarUnicidadEstudiante(const char *matricula, const char *usuario);
 
 #endif

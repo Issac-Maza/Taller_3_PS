@@ -212,7 +212,17 @@ void mostrarCursos(Curso *cursos, int cantidad) {
 }
 
 void liberarMemoriaCursos(Curso *cursos, int cantidad) {
-    	free(cursos);
+	if (cantidad > 0 && cursos != NULL) {
+		for (int i = 0; i < cantidad; i++) {
+			if (cursos[i].estudiantesLista != NULL) {
+				for (int j = 0; j < cursos[i].cantidadEstudiantes; j++) {
+					free(cursos[i].estudiantesLista[j]);
+				}
+				free(cursos[i].estudiantesLista);
+			}
+		}
+		free(cursos);
+	}
 }
 
 int verificarUnicidadCurso(const char *codigo, Curso *cursos, int cantidad) {

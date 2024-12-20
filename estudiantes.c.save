@@ -74,66 +74,33 @@ void crearEstudiante(Estudiante **estudiantes, int *cantidad) {
 	Estudiante nuevoEstudiante;
 
     	printf("Ingrese los nombres del estudiante: ");
-	fgets(nuevoEstudiante.nombres, sizeof(nuevoEstudiante.nombres), stdin);
-	strtok(nuevoEstudiante.nombres, "\n");
-
-	if (strlen(nuevoEstudiante.nombres) == 0) {
-        	printf("Error: El nombre no puede estar vacío.\n");
-        	return;
-	}
+    	fgets(nuevoEstudiante.nombres, sizeof(nuevoEstudiante.nombres), stdin);
+    	strtok(nuevoEstudiante.nombres, "\n");
 
     	printf("Ingrese los apellidos del estudiante: ");
-	fgets(nuevoEstudiante.apellidos, sizeof(nuevoEstudiante.apellidos), stdin);
-	strtok(nuevoEstudiante.apellidos, "\n");
-
-	if (strlen(nuevoEstudiante.apellidos) == 0) {
-        	printf("Error: Los apellidos no pueden estar vacíos.\n");
-        	return;
-	}
-
-    	printf("Ingrese la matrícula: ");
-	fgets(nuevoEstudiante.matricula, sizeof(nuevoEstudiante.matricula), stdin);
-	strtok(nuevoEstudiante.matricula, "\n");
+    	fgets(nuevoEstudiante.apellidos, sizeof(nuevoEstudiante.apellidos), stdin);
+    	strtok(nuevoEstudiante.apellidos, "\n"    	printf("Ingrese la matrícula: ");
+    	fgets(nuevoEstudiante.matricula, sizeof(nuevoEstudiante.matricula), stdin);
+    	strtok(nuevoEstudiante.matricula, "\n");
 
 	if (verificarUnicidadEstudiante(nuevoEstudiante.matricula, *estudiantes, *cantidad)) {
-        	printf("Error: Matrícula ya registrada.\n");
-        	return;
-	}
-
-	if (strlen(nuevoEstudiante.matricula) == 0) {
-        	printf("Error: La matrícula no puede estar vacía.\n");
-        	return;
+    		printf("Error: Matrícula ya registrada.\n");
+    		return;
 	}
 
     	printf("Ingrese el usuario: ");
-	fgets(nuevoEstudiante.usuario, sizeof(nuevoEstudiante.usuario), stdin);
-	strtok(nuevoEstudiante.usuario, "\n");
-
-	if (strlen(nuevoEstudiante.usuario) == 0) {
-		printf("Error: El usuario no puede estar vacío.\n");
-		return;
-	}
+    	fgets(nuevoEstudiante.usuario, sizeof(nuevoEstudiante.usuario), stdin);
+    	strtok(nuevoEstudiante.usuario, "\n");
 
     	printf("Ingrese la clave: ");
-	fgets(nuevoEstudiante.clave, sizeof(nuevoEstudiante.clave), stdin);
-	strtok(nuevoEstudiante.clave, "\n");
-
-	if (strlen(nuevoEstudiante.clave) == 0) {
-		printf("Error: La clave no puede estar vacía.\n");
-		return;
-	}
+    	fgets(nuevoEstudiante.clave, sizeof(nuevoEstudiante.clave), stdin);
+    	strtok(nuevoEstudiante.clave, "\n");
 
     	strcpy(nuevoEstudiante.estado, "Activo");
 
-	Estudiante *temp = realloc(*estudiantes, (*cantidad + 1) * sizeof(Estudiante));
-	if (!temp) {
-		printf("Error: No se pudo asignar memoria.\n");
-		return;
-	}
-
-    	*estudiantes = temp;
-	(*estudiantes)[*cantidad] = nuevoEstudiante;
-	(*cantidad)++;
+    	*estudiantes = realloc(*estudiantes, (*cantidad + 1) * sizeof(Estudiante));
+    	(*estudiantes)[*cantidad] = nuevoEstudiante;
+    	(*cantidad)++;
 
     	printf("Estudiante creado correctamente.\n");
 }
@@ -184,7 +151,5 @@ int verificarUnicidadEstudiante(const char *matricula, Estudiante *estudiantes, 
 }
 
 void liberarMemoriaEstudiantes(Estudiante *estudiantes, int cantidad) {
-	if (cantidad > 0 && estudiantes != NULL) {
-		free(estudiantes);
-	}
+	free(estudiantes);
 }

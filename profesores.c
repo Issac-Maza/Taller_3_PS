@@ -1,14 +1,15 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 #include "profesores.h"
 #include "materias.h"
-#include "utils.h"
+#include "cursos.h"
+#include "utilidades.h"
 
-void cargarDatosProfesores(Profesor **profesores, int *cantidad) {
+void cargarDatosProfesores(Profesor **profesores, int *cantidad, Materia *materias, int cantidadMaterias) {
     	FILE *archivo = fopen("archivos/profesores.txt", "r");
     	if (!archivo) {
-        	printf("Error al abrir el archivo de profesores.\n");
+        	printf("Error al abrir archivo de profesores.\n");
         	return;
     	}
 
@@ -17,52 +18,53 @@ void cargarDatosProfesores(Profesor **profesores, int *cantidad) {
     	Profesor temp;
 
     	while (fscanf(archivo, "%[^-]-%[^-]-%[^-]-%[^-]-%[^-]-%[^-]-%[^\n]\n", 
-		temp.nombre, temp.apellidos, temp.cedula, temp.usuario, temp.clave, temp.estado, temp.materias) != EOF) {
+		temp.nombre, temp.apellidos, temp.cedula, temp.usuario, temp.clave, temp.estado, temp.materiasLista) != EOF) {
 
-        	*profesores = realloc(*profesores, (*cantidad + 1) * sizeof(Profesor));
-        	(*profesores)[*cantidad] = temp;
+		temp.materiasLista = NULL;
+		temp.cantidadMaterias = 0;
 
-        	char *materiaToken = strtok(temp.materias, "/");
-        	int materiaCount = 0;
+		char *materiaToken = strtok(temp.materiasLista, "/");
+		while (materiaToken != NULL) {
+			if (!verificarMateriaDuplicada(temp.materiasLista, temp.cantidadMaterias, materiaToken)) {
+				temp.materiasLista = realloc(temp.materiasLista, (temp.cantidadMaterias + 1) * sizeof(char *));
+				temp.materiasLista[temp.cantidadMaterias] = malloc(strlen(materiaToken) + 1);
+				strcpy(temp.materiasLista[temp.cantidadMaterias], materiaToken);
+				temp.cantidadMaterias++;
+			}
+			materiaToken = strtok(NULL, "/");
+		}
 
-        	while (materiaToken) {
-            		if (!verificarMateriaDuplicada((*profesores)[*cantidad].materiasLista, 
-				materiaCount, materiaToken)) {
-                		(*profesores)[*cantidad].materiasLista = realloc((*profesores)[*cantidad].materiasLista, 
-                    		(materiaCount + 1) * sizeof(char *));
-                		(*profesores)[*cantidad].materiasLista[materiaCount] = strdup(materiaToken);
-                		materiaCount++;
-            		}
-            		materiaToken = strtok(NULL, "/");
-        	}
+		*profesores = realloc(*profesores, (*cantidad + 1) * sizeof(Profesor));
+		(*profesores)[*cantidad] = temp;
+		(*cantidad)++;
+	}
 
-        	(*profesores)[*cantidad].cantidadMaterias = materiaCount;
-        	(*cantidad)++;
-    	}
-    	fclose(archivo);
+	fclose(archivo);
 }
 
 void guardarDatosProfesores(Profesor *profesores, int cantidad) {
     	FILE *archivo = fopen("archivos/profesores.txt", "w");
     	if (!archivo) {
-        	printf("Error al abrir el archivo de profesores para guardar.\n");
+        	printf("Error al guardar archivo de profesores.\n");
         	return;
     	}
 
     	for (int i = 0; i < cantidad; i++) {
-        	fprintf(archivo, "%s-%s-%s-%s-%s-%s-", 
-            	profesores[i].nombre, profesores[i].apellidos, profesores[i].cedula, 
-            	profesores[i].usuario, profesores[i].clave, profesores[i].estado);
+        	fprintf(archivo, "%s-%s-%s-%s-%s-%s", 
+			profesores[i].nombre, profesores[i].apellidos, profesores[i].cedula, 
+			profesores[i].usuario, profesores[i].clave, profesores[i].estado);
 
-        	for (int j = 0; j < profesores[i].cantidadMaterias; j++) {
-            		fprintf(archivo, "%s%s", profesores[i].materiasLista[j], 
-				j < profesores[i].cantidadMaterias - 1 ? "/" : "\n");
-        	}
-    	}
-    	fclose(archivo);
+		for (int j = 0; j < profesores[i].cantidadMaterias; j++) {
+			fprintf(archivo, "%s%s", profesores[i].materiasLista[j], 
+				(j == profesores[i].cantidadMaterias - 1) ? "" : "/");
+		}
+		fprintf(archivo, "\n");
+	}
+
+    fclose(archivo);
 }
 
-void gestionarProfesores(Profesor **profesores, int *cantidad) {
+void gestionarProfesores(Profesor **profesores, int *cantidad, Materia *materias, int cantidadMaterias) {
 	int opcion;
 	do {
         	printf("\n--- GESTIÓN DE PROFESORES ---\n");
@@ -159,39 +161,42 @@ void crearProfesor(Profesor **profesores, int *cantidad, Materia *materias, int 
 }
 
 void editarProfesor(Profesor *profesores, int cantidad, Curso *cursos, int cantidadCursos) {
-    	char cc[15];
-    	int encontrado = 0;
-
-    	printf("Ingrese la Cedula(C.C.). del profesor a editar: ");
+    	char cedula[20];
+    	printf("Ingrese la cédula del profesor a editar: ");
     	fgets(cedula, sizeof(cedula), stdin);
     	strtok(cedula, "\n");
 
     	for (int i = 0; i < cantidad; i++) {
-        	if (strcmp(profesores[i].cc, cc) == 0) {
+        	if (strcmp(profesores[i].cedula, cedula) == 0) {
             		printf("Profesor encontrado: %s %s\n", profesores[i].nombre, profesores[i].apellidos);
+
+            		int estaAsignado = 0;
+            		for (int j = 0; j < cantidadCursos; j++) {
+                		if (strcmp(cursos[j].profesorCedula, cedula) == 0) {
+                    			estaAsignado = 1;
+                    			break;
+                		}
+            		}
 
             		printf("Ingrese la nueva clave: ");
             		fgets(profesores[i].clave, sizeof(profesores[i].clave), stdin);
             		strtok(profesores[i].clave, "\n");
 
-            		int cursosAsignados = verificarCursosProfesor(cursos, cantidadCursos, cc);
-            		if (cursosAsignados > 0) {
-                		printf("El profesor tiene cursos asignados. Solo se actualizará la clave.\n");
-            		} else {
-                		printf("Ingrese el nuevo estado (Activo/Inactivo): ");
-                		fgets(profesores[i].estado, sizeof(profesores[i].estado), stdin);
-                		strtok(profesores[i].estado, "\n");
-            		}
+            		printf("Ingrese el nuevo estado (Activo/Inactivo): ");
+            		char nuevoEstado[10];
+            		fgets(nuevoEstado, sizeof(nuevoEstado), stdin);
+            		strtok(nuevoEstado, "\n");
 
-            		printf("Profesor actualizado correctamente.\n");
-            		encontrado = 1;
-            		break;
+            		if (estaAsignado && strcmp(nuevoEstado, "Inactivo") == 0) {
+                		printf("Error: El profesor está asignado a uno o más cursos y no puede ser inactivado.\n");
+            		} else {
+                		strcpy(profesores[i].estado, nuevoEstado);
+                		printf("Profesor actualizado correctamente.\n");
+            		}
+            		return;
         	}
     	}
-
-    	if (!encontrado) {
-        	printf("Profesor no encontrado.\n");
-    	}
+    	printf("Profesor no encontrado.\n");
 }
 
 void mostrarProfesores(Profesor *profesores, int cantidad) {
@@ -232,12 +237,15 @@ int verificarMateriaDuplicada(char **materiasLista, int cantidadMaterias, const 
 
 
 void liberarMemoriaProfesores(Profesor *profesores, int cantidad) {
-    	for (int i = 0; i < cantidad; i++) {
-        	for (int j = 0; j < profesores[i].cantidadMaterias; j++) {
-            		free(profesores[i].materiasLista[j]);
+    	if (cantidad > 0 && profesores != NULL) {
+        	for (int i = 0; i < cantidad; i++) {
+            		if (profesores[i].materiasLista != NULL) {
+                		for (int j = 0; j < profesores[i].cantidadMaterias; j++) {
+                    			free(profesores[i].materiasLista[j]);
+                		}
+                		free(profesores[i].materiasLista);
+            		}
         	}
-        	free(profesores[i].materiasLista);
+        	free(profesores);
     	}
-    	free(profesores);
 }
-

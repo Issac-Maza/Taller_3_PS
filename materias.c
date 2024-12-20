@@ -148,5 +148,7 @@ int verificarUnicidadMateria(const char *codigo) {
 }
 
 void liberarMemoriaMaterias(Materia *materias, int cantidad) {
-    free(materias);
+	if (cantidad > 0 && materias != NULL) {
+		free(materias);
+	}
 }
