@@ -1,11 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "profesores.h"
-#include "cursos.h"
+#include "profesores.h""
 #include "utilidades.h"
 
-void cargarDatosProfesores(Profesor **profesores, int *cantidad) {
+void mostrarProfesores(Profesor *profesores, int cantidad);
+
+void cargarDatosProfesores(Profesor **profesores, int *cantidad, Materia *materias, int cantidadMaterias) {
     	FILE *archivo = fopen("archivos/profesores.txt", "r");
     	if (!archivo) {
         	printf("Error al abrir archivo de profesores.\n");
@@ -18,7 +19,6 @@ void cargarDatosProfesores(Profesor **profesores, int *cantidad) {
     	char materiasBuffer[500];
 
     	while (fscanf(archivo, "%[^-]-%[^-]-%[^-]-%[^-]-%[^-]-%[^-]-%[^\n]\n", temp.nombre, temp.apellidos, temp.cedula, temp.usuario, temp.clave, temp.estado, materiasBuffer) != EOF) {
-
         	temp.materiasLista = NULL;
         	temp.cantidadMaterias = 0;
 
@@ -60,7 +60,7 @@ void guardarDatosProfesores(Profesor *profesores, int cantidad) {
 void gestionarProfesores(Profesor **profesores, int *cantidad, Materia *materias, int cantidadMaterias, struct Curso *cursos, int cantidadCursos) {
     	int opcion;
     	do {
-        	printf("\n--- GESTIÓN DE PROFESORES ---\n");
+        	printf("\n     ADMINISTRAR PROFESORES ---\n");
         	printf("1. Crear Profesor\n");
         	printf("2. Editar Profesor\n");
         	printf("3. Mostrar Profesores\n");
