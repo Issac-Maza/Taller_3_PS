@@ -4,7 +4,7 @@
 #include "materias.h"
 
 
-typedef struct Curso Curso;
+struct Curso;
 
 
 typedef struct {
@@ -23,7 +23,7 @@ void cargarDatosProfesores(Profesor **profesores, int *cantidad, Materia *materi
 void guardarDatosProfesores(Profesor *profesores, int cantidad);
 void gestionarProfesores(Profesor **profesores, int *cantidad, Materia *materias, int cantidadMaterias);
 void crearProfesor(Profesor **profesores, int *cantidad, Materia *materias, int cantidadMaterias);
-void editarProfesor(Profesor *profesores, int cantidad, Curso *cursos, int cantidadCursos);
+void editarProfesor(Profesor *profesores, int cantidad, struct Curso *cursos, int cantidadCursos);
 void liberarMemoriaProfesores(Profesor *profesores, int cantidad);
 
 

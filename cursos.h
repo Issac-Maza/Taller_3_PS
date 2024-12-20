@@ -5,7 +5,7 @@
 #include "estudiantes.h"
 
 
-typedef struct Profesor Profesor;
+struct Profesor;
 
 
 typedef struct {

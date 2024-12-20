@@ -159,7 +159,7 @@ void crearProfesor(Profesor **profesores, int *cantidad, Materia *materias, int 
     	printf("Profesor creado exitosamente.\n");
 }
 
-void editarProfesor(Profesor *profesores, int cantidad, Curso *cursos, int cantidadCursos) {
+void editarProfesor(Profesor *profesores, int cantidad, struct Curso *cursos, int cantidadCursos) {
     	char cedula[20];
     	printf("Ingrese la cédula del profesor a editar: ");
     	fgets(cedula, sizeof(cedula), stdin);
@@ -178,8 +178,8 @@ void editarProfesor(Profesor *profesores, int cantidad, Curso *cursos, int canti
             		}
 
             		printf("Ingrese la nueva clave: ");
-            		fgets(profesores[i].clave, sizeof(profesores[i].clave), stdin);
-            		strtok(profesores[i].clave, "\n");
+			fgets(profesores[i].clave, sizeof(profesores[i].clave), stdin);
+			strtok(profesores[i].clave, "\n");
 
             		printf("Ingrese el nuevo estado (Activo/Inactivo): ");
             		char nuevoEstado[10];
