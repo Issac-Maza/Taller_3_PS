@@ -16,7 +16,6 @@ void inicializarMaterias() {
         return;
     }
 
-    // Asignar una capacidad inicial al arreglo dinámico
     capacidadMaterias = 10;
     materias = (Materia *)malloc(capacidadMaterias * sizeof(Materia));
     if (!materias) {
@@ -25,26 +24,28 @@ void inicializarMaterias() {
         return;
     }
 
-    // Leer las materias del archivo
     while (fscanf(archivo, "%49[^-]-%9[^-]-%d\n", materias[totalMaterias].nombre,
                   materias[totalMaterias].codigo, (int *)&materias[totalMaterias].estado) == 3) {
         totalMaterias++;
 
-        // Ampliar la capacidad del arreglo si es necesario
+        // Redimensionar si es necesario
         if (totalMaterias >= capacidadMaterias) {
             capacidadMaterias *= 2;
-            materias = (Materia *)realloc(materias, capacidadMaterias * sizeof(Materia));
-            if (!materias) {
+            Materia *tmp = realloc(materias, capacidadMaterias * sizeof(Materia));
+            if (!tmp) {
                 printf("Error al ampliar el arreglo de materias.\n");
+                free(materias);
                 fclose(archivo);
-                return;
+                exit(EXIT_FAILURE); // Salida segura
             }
+            materias = tmp;
         }
     }
 
     fclose(archivo);
     printf("Materias cargadas con éxito.\n");
 }
+
 
 // Guarda las materias en un archivo
 void guardarMaterias() {
@@ -90,14 +91,16 @@ void crearMateria() {
 
     nuevaMateria.estado = true;
 
-    // Ampliar la capacidad del arreglo si es necesario
+    // Redimensionar si es necesario
     if (totalMaterias >= capacidadMaterias) {
         capacidadMaterias *= 2;
-        materias = (Materia *)realloc(materias, capacidadMaterias * sizeof(Materia));
-        if (!materias) {
+        Materia *tmp = realloc(materias, capacidadMaterias * sizeof(Materia));
+        if (!tmp) {
             printf("Error al ampliar el arreglo de materias.\n");
-            return;
+            free(materias);
+            exit(EXIT_FAILURE); // Salida segura
         }
+        materias = tmp;
     }
 
     materias[totalMaterias++] = nuevaMateria;
@@ -133,7 +136,7 @@ void editarMateria() {
     printf("No se encontró una materia con ese código.\n");
 }
 
-// Lista todas las materias
+
 void listarMaterias() {
     printf("Listado de Materias:\n");
     for (int i = 0; i < totalMaterias; i++) {
@@ -142,11 +145,25 @@ void listarMaterias() {
     }
 }
 
+
 // Libera la memoria dinámica utilizada por el arreglo
 void liberarMaterias() {
-    free(materias);
-    materias = NULL;
+    if (materias) {
+        free(materias);
+        materias = NULL;
+    }
     totalMaterias = 0;
     capacidadMaterias = 0;
 }
 
+int obtenerTotalMaterias() {
+    return totalMaterias;
+}
+
+// Devuelve un puntero a la materia en el índice dado
+const Materia *obtenerMateriaPorIndice(int i) {
+    if (i < 0 || i >= totalMaterias) {
+        return NULL; // Si el índice no es válido, retorna NULL
+    }
+    return &materias[i];
+}

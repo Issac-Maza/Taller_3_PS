@@ -10,7 +10,8 @@ int totalCursos = 0;
 int capacidadCursos = 0;
 
 bool validarFormatoFecha(const char *fecha) {
-    if (strlen(fecha) != 10) return false; // Longitud fija de "DD/MM/YYYY"
+    if (strlen(fecha) != 10) return false;
+
     if (!isdigit(fecha[0]) || !isdigit(fecha[1]) || fecha[2] != '/' ||
         !isdigit(fecha[3]) || !isdigit(fecha[4]) || fecha[5] != '/' ||
         !isdigit(fecha[6]) || !isdigit(fecha[7]) || !isdigit(fecha[8]) || !isdigit(fecha[9])) {
@@ -21,12 +22,21 @@ bool validarFormatoFecha(const char *fecha) {
     int mes = (fecha[3] - '0') * 10 + (fecha[4] - '0');
     int anio = (fecha[6] - '0') * 1000 + (fecha[7] - '0') * 100 + (fecha[8] - '0') * 10 + (fecha[9] - '0');
 
-    if (dia < 1 || dia > 31 || mes < 1 || mes > 12 || anio < 1900) {
-        return false;
+    if (mes < 1 || mes > 12) return false;
+    if (dia < 1 || dia > 31) return false;
+
+    // Validar meses con menos de 31 días
+    if ((mes == 4 || mes == 6 || mes == 9 || mes == 11) && dia > 30) return false;
+
+    // Validar febrero
+    if (mes == 2) {
+        bool bisiesto = (anio % 4 == 0 && (anio % 100 != 0 || anio % 400 == 0));
+        if (dia > (bisiesto ? 29 : 28)) return false;
     }
 
     return true;
 }
+
 
 // Inicializa los cursos leyendo de un archivo
 void inicializarCursos() {
@@ -62,18 +72,21 @@ void inicializarCursos() {
 
         if (totalCursos >= capacidadCursos) {
             capacidadCursos *= 2;
-            cursos = (Curso *)realloc(cursos, capacidadCursos * sizeof(Curso));
-            if (!cursos) {
+            Curso *tmp = realloc(cursos, capacidadCursos * sizeof(Curso));
+            if (!tmp) {
                 printf("Error al ampliar el arreglo de cursos.\n");
+                free(cursos);
                 fclose(archivo);
-                return;
+                exit(EXIT_FAILURE);
             }
+            cursos = tmp;
         }
     }
 
     fclose(archivo);
     printf("Cursos cargados con éxito.\n");
 }
+
 
 // Guarda los cursos en un archivo
 void guardarCursos() {
@@ -144,16 +157,19 @@ void crearCurso() {
 
     if (totalCursos >= capacidadCursos) {
         capacidadCursos *= 2;
-        cursos = (Curso *)realloc(cursos, capacidadCursos * sizeof(Curso));
-        if (!cursos) {
+        Curso *tmp = realloc(cursos, capacidadCursos * sizeof(Curso));
+        if (!tmp) {
             printf("Error al ampliar el arreglo de cursos.\n");
-            return;
+            free(cursos);
+            exit(EXIT_FAILURE);
         }
+        cursos = tmp;
     }
 
     cursos[totalCursos++] = nuevoCurso;
     printf("Curso creado con éxito.\n");
 }
+
 
 // Edita un curso existente
 void editarCurso() {
@@ -207,9 +223,12 @@ void listarCursos() {
 
 // Libera la memoria dinámica utilizada por el arreglo
 void liberarCursos() {
-    free(cursos);
-    cursos = NULL;
+    if (cursos) {
+        free(cursos);
+        cursos = NULL;
+    }
     totalCursos = 0;
     capacidadCursos = 0;
 }
+
 

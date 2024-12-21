@@ -24,4 +24,7 @@ void listarMaterias();      // Lista todas las materias
 bool validarCodigoUnico(const char *codigo); // Verifica que el código sea único
 void liberarMaterias();     // Libera la memoria dinámica utilizada por el arreglo
 
+int obtenerTotalMaterias();
+const Materia *obtenerMateriaPorIndice(int i);
+
 #endif // MATERIAS_H

@@ -16,7 +16,6 @@ void inicializarEstudiantes() {
         return;
     }
 
-    // Asignar una capacidad inicial al arreglo dinámico
     capacidadEstudiantes = 10;
     estudiantes = (Estudiante *)malloc(capacidadEstudiantes * sizeof(Estudiante));
     if (!estudiantes) {
@@ -25,7 +24,6 @@ void inicializarEstudiantes() {
         return;
     }
 
-    // Leer los estudiantes del archivo
     while (fscanf(archivo, "%49[^-]-%49[^-]-%14[^-]-%29[^-]-%19[^-]-%d\n",
                   estudiantes[totalEstudiantes].nombres,
                   estudiantes[totalEstudiantes].apellidos,
@@ -35,21 +33,23 @@ void inicializarEstudiantes() {
                   (int *)&estudiantes[totalEstudiantes].estado) == 6) {
         totalEstudiantes++;
 
-        // Ampliar la capacidad del arreglo si es necesario
         if (totalEstudiantes >= capacidadEstudiantes) {
             capacidadEstudiantes *= 2;
-            estudiantes = (Estudiante *)realloc(estudiantes, capacidadEstudiantes * sizeof(Estudiante));
-            if (!estudiantes) {
+            Estudiante *tmp = realloc(estudiantes, capacidadEstudiantes * sizeof(Estudiante));
+            if (!tmp) {
                 printf("Error al ampliar el arreglo de estudiantes.\n");
+                free(estudiantes);
                 fclose(archivo);
-                return;
+                exit(EXIT_FAILURE); // Salida segura en caso de error
             }
+            estudiantes = tmp;
         }
     }
 
     fclose(archivo);
     printf("Estudiantes cargados con éxito.\n");
 }
+
 
 // Guarda los estudiantes en un archivo
 void guardarEstudiantes() {
@@ -123,19 +123,21 @@ void crearEstudiante() {
 
     nuevoEstudiante.estado = true;
 
-    // Ampliar la capacidad del arreglo si es necesario
     if (totalEstudiantes >= capacidadEstudiantes) {
         capacidadEstudiantes *= 2;
-        estudiantes = (Estudiante *)realloc(estudiantes, capacidadEstudiantes * sizeof(Estudiante));
-        if (!estudiantes) {
+        Estudiante *tmp = realloc(estudiantes, capacidadEstudiantes * sizeof(Estudiante));
+        if (!tmp) {
             printf("Error al ampliar el arreglo de estudiantes.\n");
-            return;
+            free(estudiantes);
+            exit(EXIT_FAILURE); // Salida segura
         }
+        estudiantes = tmp;
     }
 
     estudiantes[totalEstudiantes++] = nuevoEstudiante;
     printf("Estudiante creado con éxito.\n");
 }
+
 
 // Edita un estudiante existente
 void editarEstudiante() {
@@ -183,8 +185,10 @@ void listarEstudiantes() {
 
 // Libera la memoria dinámica utilizada por el arreglo
 void liberarEstudiantes() {
-    free(estudiantes);
-    estudiantes = NULL;
+    if (estudiantes) {
+        free(estudiantes);
+        estudiantes = NULL;
+    }
     totalEstudiantes = 0;
     capacidadEstudiantes = 0;
 }

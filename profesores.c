@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include "profesores.h"
+#include "materias.h"
 
 // Inicialización de variables globales
 Profesor *profesores = NULL;
@@ -16,7 +17,6 @@ void inicializarProfesores() {
         return;
     }
 
-    // Asignar una capacidad inicial al arreglo dinámico
     capacidadProfesores = 10;
     profesores = (Profesor *)malloc(capacidadProfesores * sizeof(Profesor));
     if (!profesores) {
@@ -25,7 +25,6 @@ void inicializarProfesores() {
         return;
     }
 
-    // Leer los profesores del archivo
     while (fscanf(archivo, "%49[^-]-%49[^-]-%14[^-]-%29[^-]-%19[^-]-%d-%99[^\n]\n",
                   profesores[totalProfesores].nombres,
                   profesores[totalProfesores].apellidos,
@@ -36,21 +35,23 @@ void inicializarProfesores() {
                   profesores[totalProfesores].materias) == 7) {
         totalProfesores++;
 
-        // Ampliar la capacidad del arreglo si es necesario
         if (totalProfesores >= capacidadProfesores) {
             capacidadProfesores *= 2;
-            profesores = (Profesor *)realloc(profesores, capacidadProfesores * sizeof(Profesor));
-            if (!profesores) {
+            Profesor *tmp = realloc(profesores, capacidadProfesores * sizeof(Profesor));
+            if (!tmp) {
                 printf("Error al ampliar el arreglo de profesores.\n");
+                free(profesores);
                 fclose(archivo);
-                return;
+                exit(EXIT_FAILURE); // Salida segura
             }
+            profesores = tmp;
         }
     }
 
     fclose(archivo);
     printf("Profesores cargados con éxito.\n");
 }
+
 
 // Guarda los profesores en un archivo
 void guardarProfesores() {
@@ -94,6 +95,12 @@ bool validarUsuarioUnicoProfesor(const char *usuario) {
 
 // Agrega un nuevo profesor
 void crearProfesor() {
+    int totalMaterias = obtenerTotalMaterias(); // Usar función para obtener total de materias
+    if (totalMaterias == 0) {
+        printf("No hay materias registradas. No se puede crear un profesor.\n");
+        return;
+    }
+
     Profesor nuevoProfesor;
 
     printf("Ingrese los nombres del profesor: ");
@@ -123,24 +130,35 @@ void crearProfesor() {
     printf("Ingrese la clave del profesor: ");
     scanf(" %19s", nuevoProfesor.clave);
 
-    printf("Ingrese los códigos de materias que puede dictar (separados por '/'): ");
-    scanf(" %99[^\n]", nuevoProfesor.materias);
+    if (totalMaterias == 1) {
+        const Materia *materiaUnica = obtenerMateriaPorIndice(0); // Obtener la única materia
+        if (materiaUnica) {
+            printf("Solo hay una materia registrada: %s (%s). Se asignará automáticamente.\n",
+                   materiaUnica->nombre, materiaUnica->codigo);
+            strcpy(nuevoProfesor.materias, materiaUnica->codigo);
+        }
+    } else {
+        printf("Ingrese los códigos de materias que puede dictar (separados por '/'): ");
+        scanf(" %99[^\n]", nuevoProfesor.materias);
+    }
 
     nuevoProfesor.estado = true;
 
-    // Ampliar la capacidad del arreglo si es necesario
     if (totalProfesores >= capacidadProfesores) {
         capacidadProfesores *= 2;
-        profesores = (Profesor *)realloc(profesores, capacidadProfesores * sizeof(Profesor));
-        if (!profesores) {
+        Profesor *tmp = realloc(profesores, capacidadProfesores * sizeof(Profesor));
+        if (!tmp) {
             printf("Error al ampliar el arreglo de profesores.\n");
-            return;
+            free(profesores);
+            exit(EXIT_FAILURE); // Salida segura
         }
+        profesores = tmp;
     }
 
     profesores[totalProfesores++] = nuevoProfesor;
     printf("Profesor creado con éxito.\n");
 }
+
 
 // Edita un profesor existente
 void editarProfesor() {
@@ -183,9 +201,12 @@ void listarProfesores() {
 
 // Libera la memoria dinámica utilizada por el arreglo
 void liberarProfesores() {
-    free(profesores);
-    profesores = NULL;
+    if (profesores) {
+        free(profesores);
+        profesores = NULL;
+    }
     totalProfesores = 0;
     capacidadProfesores = 0;
 }
+
 
