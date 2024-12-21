@@ -4,12 +4,11 @@
 #include "profesores.h"
 #include "materias.h"
 
-// Inicialización de variables globales
 Profesor *profesores = NULL;
 int totalProfesores = 0;
 int capacidadProfesores = 0;
 
-// Inicializa los profesores leyendo de un archivo
+
 void inicializarProfesores() {
     FILE *archivo = fopen("profesor.txt", "r");
     if (!archivo) {
@@ -42,7 +41,7 @@ void inicializarProfesores() {
                 printf("Error al ampliar el arreglo de profesores.\n");
                 free(profesores);
                 fclose(archivo);
-                exit(EXIT_FAILURE); // Salida segura
+                exit(EXIT_FAILURE); 
             }
             profesores = tmp;
         }
@@ -53,7 +52,7 @@ void inicializarProfesores() {
 }
 
 
-// Guarda los profesores en un archivo
+
 void guardarProfesores() {
     FILE *archivo = fopen("profesor.txt", "w");
     if (!archivo) {
@@ -73,7 +72,7 @@ void guardarProfesores() {
     printf("Profesores guardados con éxito.\n");
 }
 
-// Verifica que la cédula sea única
+
 bool validarCedulaUnica(const char *cedula) {
     for (int i = 0; i < totalProfesores; i++) {
         if (strcmp(profesores[i].cedula, cedula) == 0) {
@@ -83,7 +82,7 @@ bool validarCedulaUnica(const char *cedula) {
     return true;
 }
 
-// Verifica que el usuario sea único
+
 bool validarUsuarioUnicoProfesor(const char *usuario) {
     for (int i = 0; i < totalProfesores; i++) {
         if (strcmp(profesores[i].usuario, usuario) == 0) {
@@ -93,9 +92,8 @@ bool validarUsuarioUnicoProfesor(const char *usuario) {
     return true;
 }
 
-// Agrega un nuevo profesor
 void crearProfesor() {
-    int totalMaterias = obtenerTotalMaterias(); // Usar función para obtener total de materias
+    int totalMaterias = obtenerTotalMaterias(); 
     if (totalMaterias == 0) {
         printf("No hay materias registradas. No se puede crear un profesor.\n");
         return;
@@ -131,7 +129,7 @@ void crearProfesor() {
     scanf(" %19s", nuevoProfesor.clave);
 
     if (totalMaterias == 1) {
-        const Materia *materiaUnica = obtenerMateriaPorIndice(0); // Obtener la única materia
+        const Materia *materiaUnica = obtenerMateriaPorIndice(0); 
         if (materiaUnica) {
             printf("Solo hay una materia registrada: %s (%s). Se asignará automáticamente.\n",
                    materiaUnica->nombre, materiaUnica->codigo);
@@ -150,7 +148,7 @@ void crearProfesor() {
         if (!tmp) {
             printf("Error al ampliar el arreglo de profesores.\n");
             free(profesores);
-            exit(EXIT_FAILURE); // Salida segura
+            exit(EXIT_FAILURE); 
         }
         profesores = tmp;
     }
@@ -160,7 +158,6 @@ void crearProfesor() {
 }
 
 
-// Edita un profesor existente
 void editarProfesor() {
     char cedula[15];
     printf("Ingrese la cédula del profesor que desea editar: ");
@@ -188,7 +185,7 @@ void editarProfesor() {
     printf("No se encontró un profesor con esa cédula.\n");
 }
 
-// Lista todos los profesores
+
 void listarProfesores() {
     printf("Listado de Profesores:\n");
     for (int i = 0; i < totalProfesores; i++) {
@@ -199,7 +196,7 @@ void listarProfesores() {
     }
 }
 
-// Libera la memoria dinámica utilizada por el arreglo
+
 void liberarProfesores() {
     if (profesores) {
         free(profesores);
