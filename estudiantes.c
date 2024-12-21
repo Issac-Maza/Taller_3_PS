@@ -3,12 +3,12 @@
 #include <string.h>
 #include "estudiantes.h"
 
-// Inicialización de variables globales
+
 Estudiante *estudiantes = NULL;
 int totalEstudiantes = 0;
 int capacidadEstudiantes = 0;
 
-// Inicializa los estudiantes leyendo de un archivo
+
 void inicializarEstudiantes() {
     FILE *archivo = fopen("estudiante.txt", "r");
     if (!archivo) {
@@ -51,7 +51,7 @@ void inicializarEstudiantes() {
 }
 
 
-// Guarda los estudiantes en un archivo
+
 void guardarEstudiantes() {
     FILE *archivo = fopen("estudiante.txt", "w");
     if (!archivo) {
@@ -70,7 +70,7 @@ void guardarEstudiantes() {
     printf("Estudiantes guardados con éxito.\n");
 }
 
-// Verifica que la matrícula sea única
+
 bool validarMatriculaUnica(const char *matricula) {
     for (int i = 0; i < totalEstudiantes; i++) {
         if (strcmp(estudiantes[i].matricula, matricula) == 0) {
@@ -80,7 +80,7 @@ bool validarMatriculaUnica(const char *matricula) {
     return true;
 }
 
-// Verifica que el usuario sea único
+
 bool validarUsuarioUnico(const char *usuario) {
     for (int i = 0; i < totalEstudiantes; i++) {
         if (strcmp(estudiantes[i].usuario, usuario) == 0) {
@@ -90,7 +90,7 @@ bool validarUsuarioUnico(const char *usuario) {
     return true;
 }
 
-// Agrega un nuevo estudiante
+
 void crearEstudiante() {
     Estudiante nuevoEstudiante;
 
@@ -139,7 +139,7 @@ void crearEstudiante() {
 }
 
 
-// Edita un estudiante existente
+
 void editarEstudiante() {
     char matricula[15];
     printf("Ingrese la matrícula del estudiante que desea editar: ");
@@ -158,7 +158,7 @@ void editarEstudiante() {
             printf("Ingrese el nuevo estado (1 = Activo, 0 = Inactivo): ");
             scanf("%d", &nuevoEstado);
 
-            // Validar si puede inactivarse (pendiente de implementar lógica adicional)
+            
             if (nuevoEstado == 0) {
                 printf("Verificando cursos asociados... (implementación pendiente)\n");
             }
@@ -172,7 +172,7 @@ void editarEstudiante() {
     printf("No se encontró un estudiante con esa matrícula.\n");
 }
 
-// Lista todos los estudiantes
+
 void listarEstudiantes() {
     printf("Listado de Estudiantes:\n");
     for (int i = 0; i < totalEstudiantes; i++) {
@@ -183,7 +183,7 @@ void listarEstudiantes() {
     }
 }
 
-// Libera la memoria dinámica utilizada por el arreglo
+
 void liberarEstudiantes() {
     if (estudiantes) {
         free(estudiantes);
