@@ -1,38 +1,31 @@
 #ifndef CURSOS_H
 #define CURSOS_H
 
-#include "materias.h"
-#include "estudiantes.h"
+#include <stdbool.h>
 
-
-struct Profesor;
-
-
+// Estructura para un curso
 typedef struct {
-    char codigo[20];
-    char materia[20];
-    char profesorCedula[20];
-    char fechaInicio[11];
-    char fechaFin[11];
-    char estudiantesLista[30][15];
-    int cantidadEstudiantes;
+    char codigoCurso[10];    // Código único del curso
+    char codigoMateria[10];  // Código de la materia asociada
+    char cedulaProfesor[15]; // Cédula del profesor
+    char fechaInicio[11];    // Fecha de inicio (formato: YYYY-MM-DD)
+    char fechaFin[11];       // Fecha de fin (formato: YYYY-MM-DD)
+    char estudiantes[300];   // Matrículas de estudiantes separadas por '/'
 } Curso;
 
+// Declaraciones globales para el arreglo dinámico
+extern Curso *cursos;        // Puntero dinámico a Curso
+extern int totalCursos;      // Número actual de cursos
+extern int capacidadCursos;  // Capacidad actual del arreglo dinámico
 
-void cargarDatosCursos(Curso **cursos, int *cantidad);
-void guardarDatosCursos(Curso *cursos, int cantidad);
-void gestionarCursos(Curso **cursos, int *cantidad, Estudiante *estudiantes, int cantidadEstudiantes, Materia *materias, int cantidadMaterias, Profesor *profesores, int cantidadProfesores);
-void crearCurso(Curso **cursos, int *cantidad, Estudiante *estudiantes, int cantidadEstudiantes, Materia *materias, int cantidadMaterias, Profesor *profesores, int cantidadProfesores);
-void editarCurso(Curso *cursos, int cantidad);
-void mostrarCursos(Curso *cursos, int cantidad);
-void liberarMemoriaCursos(Curso *cursos, int cantidad);
+// Funciones relacionadas con los cursos
+void inicializarCursos();         // Inicializa los cursos desde un archivo
+void guardarCursos();             // Guarda los cursos en un archivo
+void crearCurso();                // Agrega un nuevo curso
+void editarCurso();               // Edita un curso existente
+void listarCursos();              // Lista todos los cursos
+bool validarCodigoCursoUnico(const char *codigoCurso); // Verifica que el código sea único
+void liberarCursos();             // Libera la memoria dinámica utilizada por el arreglo
 
+#endif // CURSOS_H
 
-int verificarUnicidadCurso(const char *codigo, Curso *cursos, int cantidad);
-int verificarRelacionMaterias(const char *codigo, Materia *materias, int cantidad);
-int verificarRelacionProfesor(const char *cedula, Profesor *profesores, int cantidad);
-int verificarRelacionEstudiantes(const char *matricula, Estudiante *estudiantes, int cantidad);
-int verificarCursosAsignados(const Curso *cursos, int cantidadCursos, const char *codigo);
-int verificarMaxEstudiantes(int cantidadEstudiantes);
-
-#endif

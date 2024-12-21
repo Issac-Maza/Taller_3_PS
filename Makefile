@@ -1,39 +1,32 @@
+# Nombre del compilador
 CC = gcc
-CFLAGS = -Wall -Wextra -std=c99
 
+# Flags para el compilador
+CFLAGS = -Wall -Wextra -g
 
-SRCS = main.c estudiantes.c profesores.c materias.c cursos.c utilidades.c
-OBJS = $(SRCS:.c=.o)
+# Archivos fuente y objeto
+SRC = main.c materias.c estudiantes.c profesores.c cursos.c
+OBJ = $(SRC:.c=.o)
 
+# Nombre del ejecutable
+EXEC = programa
 
-TARGET = gestion_colegio
+# Regla principal
+all: $(EXEC)
 
+# Regla para compilar el ejecutable
+$(EXEC): $(OBJ)
+	$(CC) $(CFLAGS) -o $@ $^
 
-all: $(TARGET)
-
-
-$(TARGET): $(OBJS)
-	$(CC) $(CFLAGS) -o $(TARGET) $(OBJS)
-
-
+# Regla para compilar archivos .c en .o
 %.o: %.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
+# Regla para limpiar los archivos objeto y el ejecutable
+clean:
+	rm -f $(OBJ) $(EXEC)
 
-tidy:
-	rm -f $(OBJS)
+# Regla para limpiar completamente (incluyendo archivos de datos temporales)
+cleanall: clean
+	rm -f *.txt
 
-clean: tidy
-	rm -f $(TARGET)
-
-
-run: all
-	./$(TARGET)
-
-
-main.o: main.c estudiantes.h profesores.h materias.h cursos.h utilidades.h
-estudiantes.o: estudiantes.c estudiantes.h utilidades.h
-profesores.o: profesores.c profesores.h utilidades.h
-materias.o: materias.c materias.h utilidades.h
-cursos.o: cursos.c cursos.h estudiantes.h profesores.h materias.h utilidades.h
-utilidades.o: utilidades.c utilidades.h

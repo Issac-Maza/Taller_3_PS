@@ -1,190 +1,191 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
-#include "utilidades.h"
+#include <string.h>
 #include "estudiantes.h"
 
-void cargarDatosEstudiantes(Estudiante **estudiantes, int *cantidad) {
-    	FILE *archivo = fopen("archivos/estudiantes.txt", "r");
-    	if (!archivo) {
-        	printf("Error al abrir el archivo de estudiantes.\n");
-        	return;
-    	}
+// Inicialización de variables globales
+Estudiante *estudiantes = NULL;
+int totalEstudiantes = 0;
+int capacidadEstudiantes = 0;
 
-    	*cantidad = 0;
-    	*estudiantes = NULL;
-    	Estudiante temp;
+// Inicializa los estudiantes leyendo de un archivo
+void inicializarEstudiantes() {
+    FILE *archivo = fopen("estudiante.txt", "r");
+    if (!archivo) {
+        printf("No se pudo abrir el archivo de estudiantes. Creando lista vacía.\n");
+        return;
+    }
 
-    	while (fscanf(archivo, "%[^-]-%[^-]-%[^-]-%[^-]-%[^-]-%[^\n]\n", 
-		temp.nombres, temp.apellidos, temp.matricula, temp.usuario, temp.clave, temp.estado) != EOF) {
-        	*estudiantes = realloc(*estudiantes, (*cantidad + 1) * sizeof(Estudiante));
-        	(*estudiantes)[*cantidad] = temp;
-        	(*cantidad)++;
-    	}
-    	fclose(archivo);
+    // Asignar una capacidad inicial al arreglo dinámico
+    capacidadEstudiantes = 10;
+    estudiantes = (Estudiante *)malloc(capacidadEstudiantes * sizeof(Estudiante));
+    if (!estudiantes) {
+        printf("Error al asignar memoria para los estudiantes.\n");
+        fclose(archivo);
+        return;
+    }
+
+    // Leer los estudiantes del archivo
+    while (fscanf(archivo, "%49[^-]-%49[^-]-%14[^-]-%29[^-]-%19[^-]-%d\n",
+                  estudiantes[totalEstudiantes].nombres,
+                  estudiantes[totalEstudiantes].apellidos,
+                  estudiantes[totalEstudiantes].matricula,
+                  estudiantes[totalEstudiantes].usuario,
+                  estudiantes[totalEstudiantes].clave,
+                  (int *)&estudiantes[totalEstudiantes].estado) == 6) {
+        totalEstudiantes++;
+
+        // Ampliar la capacidad del arreglo si es necesario
+        if (totalEstudiantes >= capacidadEstudiantes) {
+            capacidadEstudiantes *= 2;
+            estudiantes = (Estudiante *)realloc(estudiantes, capacidadEstudiantes * sizeof(Estudiante));
+            if (!estudiantes) {
+                printf("Error al ampliar el arreglo de estudiantes.\n");
+                fclose(archivo);
+                return;
+            }
+        }
+    }
+
+    fclose(archivo);
+    printf("Estudiantes cargados con éxito.\n");
 }
 
-void guardarDatosEstudiantes(Estudiante *estudiantes, int cantidad) {
-	FILE *archivo = fopen("archivos/estudiantes.txt", "w");
-    	if (!archivo) {
-        	printf("Error al abrir el archivo de estudiantes para guardar.\n");
-        	return;
-    	}
+// Guarda los estudiantes en un archivo
+void guardarEstudiantes() {
+    FILE *archivo = fopen("estudiante.txt", "w");
+    if (!archivo) {
+        printf("No se pudo abrir el archivo para guardar los estudiantes.\n");
+        return;
+    }
 
-    	for (int i = 0; i < cantidad; i++) {
-        	fprintf(archivo, "%s-%s-%s-%s-%s-%s\n", 
-			estudiantes[i].nombres, estudiantes[i].apellidos, estudiantes[i].matricula, 
-			estudiantes[i].usuario, estudiantes[i].clave, estudiantes[i].estado);
-    	}
-    	fclose(archivo);
+    for (int i = 0; i < totalEstudiantes; i++) {
+        fprintf(archivo, "%s-%s-%s-%s-%s-%d\n",
+                estudiantes[i].nombres, estudiantes[i].apellidos,
+                estudiantes[i].matricula, estudiantes[i].usuario,
+                estudiantes[i].clave, estudiantes[i].estado);
+    }
+
+    fclose(archivo);
+    printf("Estudiantes guardados con éxito.\n");
 }
 
-void gestionarEstudiantes(Estudiante **estudiantes, int *cantidad) {
-    	int opcion;
-    	do {
-        	printf("\n     ADMINISTRAR DE ESTUDIANTES    \n");
-        	printf("1. Crear Estudiante\n");
-        	printf("2. Editar Estudiante\n");
-        	printf("3. Mostrar Estudiantes\n");
-        	printf("4. Volver al menú principal\n");
-        	printf("Seleccione una opción: ");
-        	scanf("%d", &opcion);
-        	limpiarBuffer();
-
-        	switch (opcion) {
-            		case 1:
-                		crearEstudiante(estudiantes, cantidad);
-                		break;
-            		case 2:
-                		editarEstudiante(*estudiantes, *cantidad);
-                		break;
-            		case 3:
-                		mostrarEstudiantes(*estudiantes, *cantidad);
-                		break;
-            		case 4:
-                		printf("Volviendo al menú principal...\n");
-                		break;
-            		default:
-                		printf("Opción inválida. Intente de nuevo.\n");
-        	}
-    	} while (opcion != 4);
+// Verifica que la matrícula sea única
+bool validarMatriculaUnica(const char *matricula) {
+    for (int i = 0; i < totalEstudiantes; i++) {
+        if (strcmp(estudiantes[i].matricula, matricula) == 0) {
+            return false;
+        }
+    }
+    return true;
 }
 
-void crearEstudiante(Estudiante **estudiantes, int *cantidad) {
-	Estudiante nuevoEstudiante;
-
-    	printf("Ingrese los nombres del estudiante: ");
-	fgets(nuevoEstudiante.nombres, sizeof(nuevoEstudiante.nombres), stdin);
-	strtok(nuevoEstudiante.nombres, "\n");
-
-	if (strlen(nuevoEstudiante.nombres) == 0) {
-        	printf("Error: El nombre no puede estar vacío.\n");
-        	return;
-	}
-
-    	printf("Ingrese los apellidos del estudiante: ");
-	fgets(nuevoEstudiante.apellidos, sizeof(nuevoEstudiante.apellidos), stdin);
-	strtok(nuevoEstudiante.apellidos, "\n");
-
-	if (strlen(nuevoEstudiante.apellidos) == 0) {
-        	printf("Error: Los apellidos no pueden estar vacíos.\n");
-        	return;
-	}
-
-    	printf("Ingrese la matrícula: ");
-	fgets(nuevoEstudiante.matricula, sizeof(nuevoEstudiante.matricula), stdin);
-	strtok(nuevoEstudiante.matricula, "\n");
-
-	if (verificarUnicidadEstudiante(nuevoEstudiante.matricula, *estudiantes, *cantidad)) {
-        	printf("Error: Matrícula ya registrada.\n");
-        	return;
-	}
-
-	if (strlen(nuevoEstudiante.matricula) == 0) {
-        	printf("Error: La matrícula no puede estar vacía.\n");
-        	return;
-	}
-
-    	printf("Ingrese el usuario: ");
-	fgets(nuevoEstudiante.usuario, sizeof(nuevoEstudiante.usuario), stdin);
-	strtok(nuevoEstudiante.usuario, "\n");
-
-	if (strlen(nuevoEstudiante.usuario) == 0) {
-		printf("Error: El usuario no puede estar vacío.\n");
-		return;
-	}
-
-    	printf("Ingrese la clave: ");
-	fgets(nuevoEstudiante.clave, sizeof(nuevoEstudiante.clave), stdin);
-	strtok(nuevoEstudiante.clave, "\n");
-
-	if (strlen(nuevoEstudiante.clave) == 0) {
-		printf("Error: La clave no puede estar vacía.\n");
-		return;
-	}
-
-    	strcpy(nuevoEstudiante.estado, "Activo");
-
-	Estudiante *temp = realloc(*estudiantes, (*cantidad + 1) * sizeof(Estudiante));
-	if (!temp) {
-		printf("Error: No se pudo asignar memoria.\n");
-		return;
-	}
-
-    	*estudiantes = temp;
-	(*estudiantes)[*cantidad] = nuevoEstudiante;
-	(*cantidad)++;
-
-    	printf("Estudiante creado correctamente.\n");
+// Verifica que el usuario sea único
+bool validarUsuarioUnico(const char *usuario) {
+    for (int i = 0; i < totalEstudiantes; i++) {
+        if (strcmp(estudiantes[i].usuario, usuario) == 0) {
+            return false;
+        }
+    }
+    return true;
 }
 
-void editarEstudiante(Estudiante *estudiantes, int cantidad) {
-    	char matricula[15];
+// Agrega un nuevo estudiante
+void crearEstudiante() {
+    Estudiante nuevoEstudiante;
 
-    	printf("Ingrese la matrícula del estudiante a editar: ");
-    	fgets(matricula, sizeof(matricula), stdin);
-    	strtok(matricula, "\n");
+    printf("Ingrese los nombres del estudiante: ");
+    scanf(" %49[^\n]", nuevoEstudiante.nombres);
 
-    	for (int i = 0; i < cantidad; i++) {
-        	if (strcmp(estudiantes[i].matricula, matricula) == 0) {
-            		printf("Estudiante encontrado: %s %s\n", estudiantes[i].nombres, estudiantes[i].apellidos);
+    printf("Ingrese los apellidos del estudiante: ");
+    scanf(" %49[^\n]", nuevoEstudiante.apellidos);
 
-            		printf("Ingrese la nueva clave: ");
-            		fgets(estudiantes[i].clave, sizeof(estudiantes[i].clave), stdin);
-            		strtok(estudiantes[i].clave, "\n");
+    do {
+        printf("Ingrese la matrícula del estudiante (única): ");
+        scanf(" %14s", nuevoEstudiante.matricula);
 
-            		printf("Ingrese el nuevo estado (Activo/Inactivo): ");
-            		fgets(estudiantes[i].estado, sizeof(estudiantes[i].estado), stdin);
-            		strtok(estudiantes[i].estado, "\n");
+        if (!validarMatriculaUnica(nuevoEstudiante.matricula)) {
+            printf("La matrícula ya existe. Intente nuevamente.\n");
+        }
+    } while (!validarMatriculaUnica(nuevoEstudiante.matricula));
 
-            		printf("Estudiante actualizado correctamente.\n");
-            		return;
-        	}
-    	}
+    do {
+        printf("Ingrese el usuario del estudiante (único): ");
+        scanf(" %29s", nuevoEstudiante.usuario);
 
-	printf("Estudiante no encontrado.\n");
+        if (!validarUsuarioUnico(nuevoEstudiante.usuario)) {
+            printf("El usuario ya existe. Intente nuevamente.\n");
+        }
+    } while (!validarUsuarioUnico(nuevoEstudiante.usuario));
+
+    printf("Ingrese la clave del estudiante: ");
+    scanf(" %19s", nuevoEstudiante.clave);
+
+    nuevoEstudiante.estado = true;
+
+    // Ampliar la capacidad del arreglo si es necesario
+    if (totalEstudiantes >= capacidadEstudiantes) {
+        capacidadEstudiantes *= 2;
+        estudiantes = (Estudiante *)realloc(estudiantes, capacidadEstudiantes * sizeof(Estudiante));
+        if (!estudiantes) {
+            printf("Error al ampliar el arreglo de estudiantes.\n");
+            return;
+        }
+    }
+
+    estudiantes[totalEstudiantes++] = nuevoEstudiante;
+    printf("Estudiante creado con éxito.\n");
 }
 
-void mostrarEstudiantes(Estudiante *estudiantes, int cantidad) {
-	printf("\n--- LISTA DE ESTUDIANTES ---\n");
-	for (int i = 0; i < cantidad; i++) {
-		printf("Nombres: %s %s - Matrícula: %s - Usuario: %s - Estado: %s\n", 
-			estudiantes[i].nombres, estudiantes[i].apellidos, estudiantes[i].matricula, 
-			estudiantes[i].usuario, estudiantes[i].estado);
+// Edita un estudiante existente
+void editarEstudiante() {
+    char matricula[15];
+    printf("Ingrese la matrícula del estudiante que desea editar: ");
+    scanf(" %14s", matricula);
+
+    for (int i = 0; i < totalEstudiantes; i++) {
+        if (strcmp(estudiantes[i].matricula, matricula) == 0) {
+            printf("Estudiante encontrado: %s %s (%s)\n", estudiantes[i].nombres,
+                   estudiantes[i].apellidos, estudiantes[i].matricula);
+            printf("Estado actual: %s\n", estudiantes[i].estado ? "Activo" : "Inactivo");
+
+            printf("Ingrese la nueva clave del estudiante: ");
+            scanf(" %19s", estudiantes[i].clave);
+
+            int nuevoEstado;
+            printf("Ingrese el nuevo estado (1 = Activo, 0 = Inactivo): ");
+            scanf("%d", &nuevoEstado);
+
+            // Validar si puede inactivarse (pendiente de implementar lógica adicional)
+            if (nuevoEstado == 0) {
+                printf("Verificando cursos asociados... (implementación pendiente)\n");
+            }
+
+            estudiantes[i].estado = nuevoEstado;
+            printf("Estudiante editado con éxito.\n");
+            return;
+        }
+    }
+
+    printf("No se encontró un estudiante con esa matrícula.\n");
+}
+
+// Lista todos los estudiantes
+void listarEstudiantes() {
+    printf("Listado de Estudiantes:\n");
+    for (int i = 0; i < totalEstudiantes; i++) {
+        printf("%s %s - %s - %s - %s\n",
+               estudiantes[i].nombres, estudiantes[i].apellidos,
+               estudiantes[i].matricula, estudiantes[i].usuario,
+               estudiantes[i].estado ? "Activo" : "Inactivo");
     }
 }
 
-int verificarUnicidadEstudiante(const char *matricula, Estudiante *estudiantes, int cantidad) {
-	for (int i = 0; i < cantidad; i++) {
-		if (strcmp(estudiantes[i].matricula, matricula) == 0) {
-			return 1;
-        	}
-    	}
-	return 0;
+// Libera la memoria dinámica utilizada por el arreglo
+void liberarEstudiantes() {
+    free(estudiantes);
+    estudiantes = NULL;
+    totalEstudiantes = 0;
+    capacidadEstudiantes = 0;
 }
 
-void liberarMemoriaEstudiantes(Estudiante *estudiantes, int cantidad) {
-	if (cantidad > 0 && estudiantes != NULL) {
-		free(estudiantes);
-	}
-}

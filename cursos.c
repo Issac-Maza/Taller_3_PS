@@ -1,277 +1,215 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include "cursos.h"
-#include "materias.h"
-#include "profesores.h"
-#include "utilidades.h"
 
-void cargarDatosCursos(Curso **cursos, int *cantidad) {
-    	FILE *archivo = fopen("archivos/cursos.txt", "r");
-    	if (!archivo) {
-        	printf("Error al abrir el archivo de cursos.\n");
-        	return;
-    	}
+// Inicialización de variables globales
+Curso *cursos = NULL;
+int totalCursos = 0;
+int capacidadCursos = 0;
 
-    	*cantidad = 0;
-    	*cursos = NULL;
-    	Curso temp;
+bool validarFormatoFecha(const char *fecha) {
+    if (strlen(fecha) != 10) return false; // Longitud fija de "DD/MM/YYYY"
+    if (!isdigit(fecha[0]) || !isdigit(fecha[1]) || fecha[2] != '/' ||
+        !isdigit(fecha[3]) || !isdigit(fecha[4]) || fecha[5] != '/' ||
+        !isdigit(fecha[6]) || !isdigit(fecha[7]) || !isdigit(fecha[8]) || !isdigit(fecha[9])) {
+        return false;
+    }
 
-    	while (fscanf(archivo, "%[^-]-%[^-]-%[^-]-%[^-]-%[^-]-%[^]\n", 
-		temp.codigo, temp.materia, temp.profesorCedula, temp.fechaInicio, temp.fechaFin, temp.estudiantesLista[0]) != EOF) {
+    int dia = (fecha[0] - '0') * 10 + (fecha[1] - '0');
+    int mes = (fecha[3] - '0') * 10 + (fecha[4] - '0');
+    int anio = (fecha[6] - '0') * 1000 + (fecha[7] - '0') * 100 + (fecha[8] - '0') * 10 + (fecha[9] - '0');
 
-        	temp.cantidadEstudiantes = 0;
+    if (dia < 1 || dia > 31 || mes < 1 || mes > 12 || anio < 1900) {
+        return false;
+    }
 
-        	char *estudianteToken = strtok(temp.estudiantesLista[0], "/");
-        	while (estudianteToken && temp.cantidadEstudiantes < MAX_ESTUDIANTES) {
-            		strcpy(temp.estudiantesLista[temp.cantidadEstudiantes], estudianteToken);
-            		temp.cantidadEstudiantes++;
-            		estudianteToken = strtok(NULL, "/");
-        	}
-
-		*cursos = realloc(*cursos, (*cantidad + 1) * sizeof(Curso));
-        	(*cursos)[*cantidad] = temp;
-        	(*cantidad)++;
-    	}
-    	fclose(archivo);
+    return true;
 }
 
-void guardarDatosCursos(Curso *cursos, int cantidad) {
-    	FILE *archivo = fopen("archivos/cursos.txt", "w");
-    	if (!archivo) {
-        	printf("Error al abrir el archivo de cursos para guardar.\n");
-        	return;
-    	}
+// Inicializa los cursos leyendo de un archivo
+void inicializarCursos() {
+    FILE *archivo = fopen("curso.txt", "r");
+    if (!archivo) {
+        printf("No se pudo abrir el archivo de cursos. Creando lista vacía.\n");
+        return;
+    }
 
-    	for (int i = 0; i < cantidad; i++) {
-        	fprintf(archivo, "%s-%s-%s-%s-%s-", 
-			cursos[i].codigo, cursos[i].materia, cursos[i].profesorCedula, 
-			cursos[i].fechaInicio, cursos[i].fechaFin);
+    capacidadCursos = 10;
+    cursos = (Curso *)malloc(capacidadCursos * sizeof(Curso));
+    if (!cursos) {
+        printf("Error al asignar memoria para los cursos.\n");
+        fclose(archivo);
+        return;
+    }
 
-        	for (int j = 0; j < cursos[i].cantidadEstudiantes; j++) {
-            		fprintf(archivo, "%s%s", cursos[i].estudiantesLista[j], 
-			j < cursos[i].cantidadEstudiantes - 1 ? "/" : "\n");
-        	}
-    	}
-    	fclose(archivo);
+    while (fscanf(archivo, "%9[^-]-%9[^-]-%14[^-]-%10[^-]-%10[^-]-%299[^\n]\n",
+                  cursos[totalCursos].codigoCurso,
+                  cursos[totalCursos].codigoMateria,
+                  cursos[totalCursos].cedulaProfesor,
+                  cursos[totalCursos].fechaInicio,
+                  cursos[totalCursos].fechaFin,
+                  cursos[totalCursos].estudiantes) == 6) {
+        if (!validarFormatoFecha(cursos[totalCursos].fechaInicio) ||
+            !validarFormatoFecha(cursos[totalCursos].fechaFin)) {
+            printf("Formato de fecha inválido en curso %s. Se omitirá este curso.\n",
+                   cursos[totalCursos].codigoCurso);
+            continue;
+        }
+
+        totalCursos++;
+
+        if (totalCursos >= capacidadCursos) {
+            capacidadCursos *= 2;
+            cursos = (Curso *)realloc(cursos, capacidadCursos * sizeof(Curso));
+            if (!cursos) {
+                printf("Error al ampliar el arreglo de cursos.\n");
+                fclose(archivo);
+                return;
+            }
+        }
+    }
+
+    fclose(archivo);
+    printf("Cursos cargados con éxito.\n");
 }
 
-void gestionarCursos(Curso **cursos, int *cantidad, Estudiante *estudiantes, int cantidadEstudiantes, 
-		Materia *materias, int cantidadMaterias, Profesor *profesores, int cantidadProfesores) {
-    	int opcion;
-    	do {
-        	printf("\n--- GESTIÓN DE CURSOS ---\n");
-        	printf("1. Crear Curso\n");
-        	printf("2. Editar Curso\n");
-        	printf("3. Mostrar Cursos\n");
-        	printf("4. Volver al menú principal\n");
-        	printf("Seleccione una opción: ");
-        	scanf("%d", &opcion);
-        	limpiarBuffer();
+// Guarda los cursos en un archivo
+void guardarCursos() {
+    FILE *archivo = fopen("curso.txt", "w");
+    if (!archivo) {
+        printf("No se pudo abrir el archivo para guardar los cursos.\n");
+        return;
+    }
 
-        	switch (opcion) {
-            		case 1:
-                		crearCurso(cursos, cantidad, estudiantes, 
-					cantidadEstudiantes, materias, cantidadMaterias, profesores, cantidadProfesores);
-                	break;
-            		case 2:
-                		editarCurso(*cursos, *cantidad);
-                		break;
-            		case 3:
-                		mostrarCursos(*cursos, *cantidad);
-                		break;
-            		case 4:
-                		printf("Volviendo al menú principal...\n");
-                		break;
-            		default:
-                		printf("Opción inválida. Intente de nuevo.\n");
-        	}
-    	} while (opcion != 4);
+    for (int i = 0; i < totalCursos; i++) {
+        fprintf(archivo, "%s-%s-%s-%s-%s-%s\n",
+                cursos[i].codigoCurso, cursos[i].codigoMateria,
+                cursos[i].cedulaProfesor, cursos[i].fechaInicio,
+                cursos[i].fechaFin, cursos[i].estudiantes);
+    }
+
+    fclose(archivo);
+    printf("Cursos guardados con éxito.\n");
 }
 
-void crearCurso(Curso **cursos, int *cantidad, Estudiante *estudiantes, int cantidadEstudiantes, 
-                Materia *materias, int cantidadMaterias, Profesor *profesores, int cantidadProfesores) {
-    	Curso nuevoCurso;
-
-    	printf("Ingrese el código del curso: ");
-    	fgets(nuevoCurso.codigo, sizeof(nuevoCurso.codigo), stdin);
-    	strtok(nuevoCurso.codigo, "\n");
-
-    	if (verificarUnicidadCurso(nuevoCurso.codigo, *cursos, *cantidad)) {
-        	printf("Error: El curso ya existe.\n");
-        	return;
-    	}
-
-    	printf("Ingrese el código de la materia: ");
-    	fgets(nuevoCurso.materia, sizeof(nuevoCurso.materia), stdin);
-    	strtok(nuevoCurso.materia, "\n");
-
-    	if (!verificarRelacionMaterias(nuevoCurso.materia, materias, cantidadMaterias)) {
-        	printf("Error: Materia no encontrada.\n");
-        	return;
-    	}
-
-    	printf("Ingrese la C.C.(CEDULA) del profesor: ");
-    	fgets(nuevoCurso.profesorCedula, sizeof(nuevoCurso.profesorCedula), stdin);
-    	strtok(nuevoCurso.profesorCedula, "\n");
-
-    	if (!verificarRelacionProfesor(nuevoCurso.profesorCedula, profesores, cantidadProfesores)) {
-        	printf("Error: Profesor no encontrado.\n");
-        	return;
-    	}
-
-    	printf("Ingrese la fecha de inicio (DD/MM/AAAA): ");
-    	fgets(nuevoCurso.fechaInicio, sizeof(nuevoCurso.fechaInicio), stdin);
-    	strtok(nuevoCurso.fechaInicio, "\n");
-
-    	printf("Ingrese la fecha de fin (DD/MM/AAAA): ");
-    	fgets(nuevoCurso.fechaFin, sizeof(nuevoCurso.fechaFin), stdin);
-    	strtok(nuevoCurso.fechaFin, "\n");
-
-    	if (!validarFecha(nuevoCurso.fechaInicio) || !validarFecha(nuevoCurso.fechaFin) || strcmp(nuevoCurso.fechaInicio, nuevoCurso.fechaFin) >= 0) {
-        	printf("Error: Fecha inválida.\n");
-        	return;
-    	}
-
-    	nuevoCurso.cantidadEstudiantes = 0;
-
-    	int agregarEstudiante;
-    	do {
-        	if (verificarMaxEstudiantes(nuevoCurso.cantidadEstudiantes)) {
-            		printf("Se ha alcanzado el límite máximo de estudiantes.\n");
-            		break;
-        	}
-
-        	char matricula[15];
-        	printf("Ingrese la matrícula del estudiante: ");
-        	fgets(matricula, sizeof(matricula), stdin);
-        	strtok(matricula, "\n");
-
-        	if (!verificarRelacionEstudiantes(matricula, estudiantes, cantidadEstudiantes)) {
-            		printf("Error: Matrícula no encontrada.\n");
-        	} else {
-            		strcpy(nuevoCurso.estudiantesLista[nuevoCurso.cantidadEstudiantes], matricula);
-            		nuevoCurso.cantidadEstudiantes++;
-            		printf("Estudiante agregado correctamente.\n");
-        	}
-
-        	printf("¿Desea agregar otro estudiante? (1: Sí / 0: No): ");
-        	scanf("%d", &agregarEstudiante);
-        	limpiarBuffer();
-    	} while (agregarEstudiante == 1);
-
-    	*cursos = realloc(*cursos, (*cantidad + 1) * sizeof(Curso));
-    	(*cursos)[*cantidad] = nuevoCurso;
-    	(*cantidad)++;
-
-    	printf("Curso creado exitosamente.\n");
+// Verifica que el código del curso sea único
+bool validarCodigoCursoUnico(const char *codigoCurso) {
+    for (int i = 0; i < totalCursos; i++) {
+        if (strcmp(cursos[i].codigoCurso, codigoCurso) == 0) {
+            return false;
+        }
+    }
+    return true;
 }
 
-void editarCurso(Curso *cursos, int cantidad) {
-    	char codigo[20];
+// Agrega un nuevo curso
+void crearCurso() {
+    Curso nuevoCurso;
 
-    	printf("Ingrese el código del curso a editar: ");
-    	fgets(codigo, sizeof(codigo), stdin);
-    	strtok(codigo, "\n");
+    do {
+        printf("Ingrese el código del curso (único): ");
+        scanf(" %9s", nuevoCurso.codigoCurso);
 
-    	for (int i = 0; i < cantidad; i++) {
-        	if (strcmp(cursos[i].codigo, codigo) == 0) {
-            		printf("Curso encontrado: %s\n", cursos[i].codigo);
+        if (!validarCodigoCursoUnico(nuevoCurso.codigoCurso)) {
+            printf("El código ya existe. Intente nuevamente.\n");
+        }
+    } while (!validarCodigoCursoUnico(nuevoCurso.codigoCurso));
 
-            		printf("Ingrese la nueva fecha de inicio (DD/MM/AAAA): ");
-            		fgets(cursos[i].fechaInicio, sizeof(cursos[i].fechaInicio), stdin);
-            		strtok(cursos[i].fechaInicio, "\n");
+    printf("Ingrese el código de la materia asociada: ");
+    scanf(" %9s", nuevoCurso.codigoMateria);
 
-            		printf("Ingrese la nueva fecha de fin (DD/MM/AAAA): ");
-            		fgets(cursos[i].fechaFin, sizeof(cursos[i].fechaFin), stdin);
-            		strtok(cursos[i].fechaFin, "\n");
+    printf("Ingrese la cédula del profesor asociado: ");
+    scanf(" %14s", nuevoCurso.cedulaProfesor);
 
-            		if (!validarFecha(cursos[i].fechaInicio) || !validarFecha(cursos[i].fechaFin) || 
-				strcmp(cursos[i].fechaInicio, cursos[i].fechaFin) >= 0) {
-                		printf("Error: Fechas inválidas.\n");
-                		return;
-            		}
-            		printf("Curso actualizado correctamente.\n");
-            		return;
-        	}
-    	}
-    	printf("Error: Curso no encontrado.\n");
+    do {
+        printf("Ingrese la fecha de inicio del curso (DD/MM/YYYY): ");
+        scanf(" %10s", nuevoCurso.fechaInicio);
+        if (!validarFormatoFecha(nuevoCurso.fechaInicio)) {
+            printf("Formato de fecha inválido. Intente nuevamente.\n");
+        }
+    } while (!validarFormatoFecha(nuevoCurso.fechaInicio));
+
+    do {
+        printf("Ingrese la fecha de fin del curso (DD/MM/YYYY): ");
+        scanf(" %10s", nuevoCurso.fechaFin);
+        if (!validarFormatoFecha(nuevoCurso.fechaFin)) {
+            printf("Formato de fecha inválido. Intente nuevamente.\n");
+        }
+    } while (!validarFormatoFecha(nuevoCurso.fechaFin));
+
+    printf("Ingrese las matrículas de los estudiantes (separadas por '/'): ");
+    scanf(" %299[^\n]", nuevoCurso.estudiantes);
+
+    if (totalCursos >= capacidadCursos) {
+        capacidadCursos *= 2;
+        cursos = (Curso *)realloc(cursos, capacidadCursos * sizeof(Curso));
+        if (!cursos) {
+            printf("Error al ampliar el arreglo de cursos.\n");
+            return;
+        }
+    }
+
+    cursos[totalCursos++] = nuevoCurso;
+    printf("Curso creado con éxito.\n");
 }
 
-void mostrarCursos(Curso *cursos, int cantidad) {
-    	printf("\n--- LISTA DE CURSOS ---\n");
-    	for (int i = 0; i < cantidad; i++) {
-        	printf("Código: %s - Materia: %s - Profesor: %s - Fecha Inicio: %s - Fecha Fin: %s\n", 
-			cursos[i].codigo, cursos[i].materia, cursos[i].profesor, cursos[i].fechaInicio, cursos[i].fechaFin);
+// Edita un curso existente
+void editarCurso() {
+    char codigoCurso[10];
+    printf("Ingrese el código del curso que desea editar: ");
+    scanf(" %9s", codigoCurso);
 
-        	printf("Estudiantes Inscritos: ");
-        	for (int j = 0; j < cursos[i].cantidadEstudiantes; j++) {
-            		printf("%s%s", cursos[i].estudiantesLista[j], j < 
-				cursos[i].cantidadEstudiantes - 1 ? ", " : "\n");
-        	}
-    	}
-}
+    for (int i = 0; i < totalCursos; i++) {
+        if (strcmp(cursos[i].codigoCurso, codigoCurso) == 0) {
+            printf("Curso encontrado: %s\n", cursos[i].codigoCurso);
+            printf("Materia: %s, Profesor: %s\n", cursos[i].codigoMateria, cursos[i].cedulaProfesor);
+            printf("Fecha de inicio: %s, Fecha de fin: %s\n", cursos[i].fechaInicio, cursos[i].fechaFin);
 
-void liberarMemoriaCursos(Curso *cursos, int cantidad) {
-	if (cantidad > 0 && cursos != NULL) {
-		for (int i = 0; i < cantidad; i++) {
-			if (cursos[i].estudiantesLista != NULL) {
-				for (int j = 0; j < cursos[i].cantidadEstudiantes; j++) {
-					free(cursos[i].estudiantesLista[j]);
-				}
-				free(cursos[i].estudiantesLista);
-			}
-		}
-		free(cursos);
-	}
-}
+            do {
+                printf("Ingrese la nueva fecha de inicio (DD/MM/YYYY): ");
+                scanf(" %10s", cursos[i].fechaInicio);
+                if (!validarFormatoFecha(cursos[i].fechaInicio)) {
+                    printf("Formato de fecha inválido. Intente nuevamente.\n");
+                }
+            } while (!validarFormatoFecha(cursos[i].fechaInicio));
 
-int verificarUnicidadCurso(const char *codigo, Curso *cursos, int cantidad) {
-    	for (int i = 0; i < cantidad; i++) {
-        	if (strcmp(cursos[i].codigo, codigo) == 0) {
-            		return 1;
-        	}
-    	}
-    	return 0;
+            do {
+                printf("Ingrese la nueva fecha de fin (DD/MM/YYYY): ");
+                scanf(" %10s", cursos[i].fechaFin);
+                if (!validarFormatoFecha(cursos[i].fechaFin)) {
+                    printf("Formato de fecha inválido. Intente nuevamente.\n");
+                }
+            } while (!validarFormatoFecha(cursos[i].fechaFin));
+
+            printf("Ingrese las nuevas matrículas de estudiantes (separadas por '/'): ");
+            scanf(" %299[^\n]", cursos[i].estudiantes);
+
+            printf("Curso editado con éxito.\n");
+            return;
+        }
+    }
+
+    printf("No se encontró un curso con ese código.\n");
 }
 
 
-int verificarRelacionMaterias(const char *codigo, Materia *materias, int cantidad) {
-    	for (int i = 0; i < cantidad; i++) {
-        	if (strcmp(materias[i].codigo, codigo) == 0) {
-            		return 1;
-        	}
-    	}
-    	return 0;
+// Lista todos los cursos
+void listarCursos() {
+    printf("Listado de Cursos:\n");
+    for (int i = 0; i < totalCursos; i++) {
+        printf("%s - Materia: %s - Profesor: %s - Inicio: %s - Fin: %s - Estudiantes: %s\n",
+               cursos[i].codigoCurso, cursos[i].codigoMateria, cursos[i].cedulaProfesor,
+               cursos[i].fechaInicio, cursos[i].fechaFin, cursos[i].estudiantes);
+    }
 }
 
-int verificarRelacionProfesor(const char *cc, Profesor *profesores, int cantidad) {
-    	for (int i = 0; i < cantidad; i++) {
-        	if (strcmp(profesores[i].cc, cc) == 0) {
-            		return 1;
-        	}
-    	}
-    	return 0;
+// Libera la memoria dinámica utilizada por el arreglo
+void liberarCursos() {
+    free(cursos);
+    cursos = NULL;
+    totalCursos = 0;
+    capacidadCursos = 0;
 }
 
-int verificarRelacionEstudiantes(const char *matricula, Estudiante *estudiantes, int cantidad) {
-    	for (int i = 0; i < cantidad; i++) {
-        	if (strcmp(estudiantes[i].matricula, matricula) == 0) {
-            		return 1;
-        	}
-    	}
-    	return 0;
-}
-
-int verificarCursosAsignados(const Curso *cursos, int cantidadCursos, const char *codigo) {
-    	for (int i = 0; i < cantidadCursos; i++) {
-        	if (strcmp(cursos[i].codigo, codigo) == 0) {
-            		return 1;
-        	}
-    	}
-    	return 0;
-}
-
-int verificarMaxEstudiantes(int cantidadEstudiantes) {
-    	return cantidadEstudiantes >= 30;
-}

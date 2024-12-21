@@ -1,30 +1,33 @@
 #ifndef PROFESORES_H
 #define PROFESORES_H
 
-#include "materias.h"
-#include "cursos.h"
+#include <stdbool.h>
 
+// Estructura para un profesor
 typedef struct {
-    char nombre[100];
-    char apellidos[100];
-    char cedula[20];
-    char usuario[50];
-    char clave[50];
-    char estado[10];
-    int cantidadMaterias;
-    char **materiasLista;
+    char nombres[50];
+    char apellidos[50];
+    char cedula[15];  // Identificación única (C.C.)
+    char usuario[30]; // Usuario único
+    char clave[20];   // Contraseña
+    bool estado;      // true = Activo, false = Inactivo
+    char materias[100]; // Lista de códigos de materias que puede dictar (separados por '/')
 } Profesor;
 
-void cargarDatosProfesores(Profesor **profesores, int *cantidad, Materia *materias, int cantidadMaterias);
-void guardarDatosProfesores(Profesor *profesores, int cantidad);
-void gestionarProfesores(Profesor **profesores, int *cantidad, Materia *materias, int cantidadMaterias, struct Curso *cursos, int cantidadCursos);
-void crearProfesor(Profesor **profesores, int *cantidad, Materia *materias, int cantidadMaterias);
-void editarProfesor(Profesor *profesores, int cantidad, struct Curso *cursos, int cantidadCursos);
-void liberarMemoriaProfesores(Profesor *profesores, int cantidad);
+// Declaraciones globales para el arreglo dinámico
+extern Profesor *profesores; // Puntero dinámico a Profesor
+extern int totalProfesores;  // Número actual de profesores
+extern int capacidadProfesores; // Capacidad actual del arreglo dinámico
 
-int verificarUnicidadProfesor(Profesor *profesores, int cantidad, const char *cedula, const char *usuario);
-int verificarMateriaDuplicada(char **materiasLista, int cantidadMaterias, const char *codigoMateria);
-int verificarMateriaExistente(const char *codigoMateria, Materia *materias, int cantidadMaterias);
+// Funciones relacionadas con los profesores
+void inicializarProfesores();  // Inicializa los profesores desde un archivo
+void guardarProfesores();      // Guarda los profesores en un archivo
+void crearProfesor();          // Agrega un nuevo profesor
+void editarProfesor();         // Edita un profesor existente
+void listarProfesores();       // Lista todos los profesores
+bool validarCedulaUnica(const char *cedula); // Verifica que la cédula sea única
+bool validarUsuarioUnicoProfesor(const char *usuario); // Verifica que el usuario sea único
+void liberarProfesores();      // Libera la memoria dinámica utilizada por el arreglo
 
-#endif
+#endif // PROFESORES_H
 

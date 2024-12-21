@@ -1,101 +1,152 @@
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
 #include "materias.h"
-#include "cursos.h"
-#include "utilidades.h"
 
-void cargarDatosMaterias(Materia **materias, int *cantidad) {
-	FILE *archivo = fopen("archivos/materias.txt", "r");
-	if (!archivo) {
-		printf("Error al abrir el archivo de materias.\n");
-		return;
-	}
+// Inicialización de variables globales
+Materia *materias = NULL;
+int totalMaterias = 0;
+int capacidadMaterias = 0;
 
-	*cantidad = 0;
-	*materias = NULL;
-	Materia temp;
+// Inicializa las materias leyendo de un archivo
+void inicializarMaterias() {
+    FILE *archivo = fopen("materia.txt", "r");
+    if (!archivo) {
+        printf("No se pudo abrir el archivo de materias. Creando lista vacía.\n");
+        return;
+    }
 
-	while (fscanf(archivo, "%[^-]-%[^-]-%[^]\n", temp.codigo, temp.nombre, temp.estado) != EOF) {
-		*materias = realloc(*materias, (*cantidad + 1) * sizeof(Materia));
-		(*materias)[*cantidad] = temp;
-		(*cantidad)++;
-	}
-	fclose(archivo);
+    // Asignar una capacidad inicial al arreglo dinámico
+    capacidadMaterias = 10;
+    materias = (Materia *)malloc(capacidadMaterias * sizeof(Materia));
+    if (!materias) {
+        printf("Error al asignar memoria para las materias.\n");
+        fclose(archivo);
+        return;
+    }
+
+    // Leer las materias del archivo
+    while (fscanf(archivo, "%49[^-]-%9[^-]-%d\n", materias[totalMaterias].nombre,
+                  materias[totalMaterias].codigo, (int *)&materias[totalMaterias].estado) == 3) {
+        totalMaterias++;
+
+        // Ampliar la capacidad del arreglo si es necesario
+        if (totalMaterias >= capacidadMaterias) {
+            capacidadMaterias *= 2;
+            materias = (Materia *)realloc(materias, capacidadMaterias * sizeof(Materia));
+            if (!materias) {
+                printf("Error al ampliar el arreglo de materias.\n");
+                fclose(archivo);
+                return;
+            }
+        }
+    }
+
+    fclose(archivo);
+    printf("Materias cargadas con éxito.\n");
 }
 
-void guardarDatosMaterias(Materia *materias, int cantidad) {
-	FILE *archivo = fopen("archivos/materias.txt", "w");
-	if (!archivo) {
-		printf("Error al abrir el archivo de materias para guardar.\n");
-		return;
-	}
+// Guarda las materias en un archivo
+void guardarMaterias() {
+    FILE *archivo = fopen("materia.txt", "w");
+    if (!archivo) {
+        printf("No se pudo abrir el archivo para guardar las materias.\n");
+        return;
+    }
 
-	for (int i = 0; i < cantidad; i++) {
-		fprintf(archivo, "%s-%s-%s\n", materias[i].codigo, materias[i].nombre, materias[i].estado);
-	}
-	fclose(archivo);
+    for (int i = 0; i < totalMaterias; i++) {
+        fprintf(archivo, "%s-%s-%d\n", materias[i].nombre, materias[i].codigo, materias[i].estado);
+    }
+
+    fclose(archivo);
+    printf("Materias guardadas con éxito.\n");
 }
 
-void gestionMaterias(Materia **materias, int *cantidad) {
-	int opcion;
-	do {
-		printf("\n--- GESTIÓN DE MATERIAS ---\n");
-        	printf("1. Crear Materia\n");
-        	printf("2. Editar Materia\n");
-        	printf("3. Mostrar Materias\n");
-        	printf("4. Volver al menú principal\n");
-        	printf("Seleccione una opción: ");
-        	scanf("%d", &opcion);
-		limpiarBuffer();
-
-		switch (opcion) {
-			case 1:
-				crearMateria(materias, cantidad);
-				break;
-			case 2:
-				editarMateria(*materias, *cantidad);
-				break;
-			case 3:
-				mostrarMaterias(*materias, *cantidad);
-				break;
-			case 4:
-                		printf("Volviendo al menú principal...\n");
-                		break;
-            		default:
-                		printf("Opción inválida. Intente de nuevo.\n");
-        	}
-	} while (opcion != 4)
+// Verifica que el código de la materia sea único
+bool validarCodigoUnico(const char *codigo) {
+    for (int i = 0; i < totalMaterias; i++) {
+        if (strcmp(materias[i].codigo, codigo) == 0) {
+            return false;
+        }
+    }
+    return true;
 }
 
-void crearMateria(Materia **materias, int *cantidad) {
-	Materia nuevaMateria;
+// Agrega una nueva materia
+void crearMateria() {
+    Materia nuevaMateria;
 
-    	printf("Ingrese el código de la materia: ");
-    	fgets(nuevaMateria.codigo, sizeof(
+    printf("Ingrese el nombre de la materia: ");
+    scanf(" %49[^\n]", nuevaMateria.nombre);
 
-int verificarUnicidadMateria(const char *codigo) {
-	Materia materia;
-	FILE *archivo = fopen("archivos/materias.txt", "r");
+    do {
+        printf("Ingrese el código de la materia (único): ");
+        scanf(" %9s", nuevaMateria.codigo);
 
-	if (!archivo) {
-		return 0;
-	}
+        if (!validarCodigoUnico(nuevaMateria.codigo)) {
+            printf("El código ya existe. Intente nuevamente.\n");
+        }
+    } while (!validarCodigoUnico(nuevaMateria.codigo));
 
-	while (fscanf(archivo, "%[^-]-%[^-]-%[^\n]\n",
-		materia.nombre, materia.codigo, materia.estado) != EOF) {
-		if (strcmp(materia.codigo, codigo) == 0) {
-			fclose(archivo);
-			return 1;
-		}
-	}
+    nuevaMateria.estado = true;
 
-	fclose(archivo);
-	return 0;
+    // Ampliar la capacidad del arreglo si es necesario
+    if (totalMaterias >= capacidadMaterias) {
+        capacidadMaterias *= 2;
+        materias = (Materia *)realloc(materias, capacidadMaterias * sizeof(Materia));
+        if (!materias) {
+            printf("Error al ampliar el arreglo de materias.\n");
+            return;
+        }
+    }
+
+    materias[totalMaterias++] = nuevaMateria;
+    printf("Materia creada con éxito.\n");
 }
 
-void liberarMemoriaMaterias(Materia *materias, int cantidad) {
-	if (cantidad > 0 && materias != NULL) {
-		free(materias);
-	}
+// Edita una materia existente
+void editarMateria() {
+    char codigo[10];
+    printf("Ingrese el código de la materia que desea editar: ");
+    scanf(" %9s", codigo);
+
+    for (int i = 0; i < totalMaterias; i++) {
+        if (strcmp(materias[i].codigo, codigo) == 0) {
+            printf("Materia encontrada: %s (%s)\n", materias[i].nombre, materias[i].codigo);
+            printf("Estado actual: %s\n", materias[i].estado ? "Activo" : "Inactivo");
+
+            int nuevoEstado;
+            printf("Ingrese el nuevo estado (1 = Activo, 0 = Inactivo): ");
+            scanf("%d", &nuevoEstado);
+
+            // Validar si puede inactivarse (pendiente de implementar lógica adicional)
+            if (nuevoEstado == 0) {
+                printf("Verificando cursos asociados... (implementación pendiente)\n");
+            }
+
+            materias[i].estado = nuevoEstado;
+            printf("Materia editada con éxito.\n");
+            return;
+        }
+    }
+
+    printf("No se encontró una materia con ese código.\n");
 }
+
+// Lista todas las materias
+void listarMaterias() {
+    printf("Listado de Materias:\n");
+    for (int i = 0; i < totalMaterias; i++) {
+        printf("%s - %s - %s\n", materias[i].nombre, materias[i].codigo,
+               materias[i].estado ? "Activo" : "Inactivo");
+    }
+}
+
+// Libera la memoria dinámica utilizada por el arreglo
+void liberarMaterias() {
+    free(materias);
+    materias = NULL;
+    totalMaterias = 0;
+    capacidadMaterias = 0;
+}
+
