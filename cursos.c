@@ -4,7 +4,7 @@
 #include <ctype.h>
 #include "cursos.h"
 
-// Inicialización de variables globales
+
 Curso *cursos = NULL;
 int totalCursos = 0;
 int capacidadCursos = 0;
@@ -38,7 +38,7 @@ bool validarFormatoFecha(const char *fecha) {
 }
 
 
-// Inicializa los cursos leyendo de un archivo
+
 void inicializarCursos() {
     FILE *archivo = fopen("curso.txt", "r");
     if (!archivo) {
@@ -88,7 +88,7 @@ void inicializarCursos() {
 }
 
 
-// Guarda los cursos en un archivo
+
 void guardarCursos() {
     FILE *archivo = fopen("curso.txt", "w");
     if (!archivo) {
@@ -107,7 +107,7 @@ void guardarCursos() {
     printf("Cursos guardados con éxito.\n");
 }
 
-// Verifica que el código del curso sea único
+
 bool validarCodigoCursoUnico(const char *codigoCurso) {
     for (int i = 0; i < totalCursos; i++) {
         if (strcmp(cursos[i].codigoCurso, codigoCurso) == 0) {
@@ -117,7 +117,6 @@ bool validarCodigoCursoUnico(const char *codigoCurso) {
     return true;
 }
 
-// Agrega un nuevo curso
 void crearCurso() {
     Curso nuevoCurso;
 
@@ -171,7 +170,6 @@ void crearCurso() {
 }
 
 
-// Edita un curso existente
 void editarCurso() {
     char codigoCurso[10];
     printf("Ingrese el código del curso que desea editar: ");
@@ -211,7 +209,6 @@ void editarCurso() {
 }
 
 
-// Lista todos los cursos
 void listarCursos() {
     printf("Listado de Cursos:\n");
     for (int i = 0; i < totalCursos; i++) {
@@ -221,7 +218,6 @@ void listarCursos() {
     }
 }
 
-// Libera la memoria dinámica utilizada por el arreglo
 void liberarCursos() {
     if (cursos) {
         free(cursos);
