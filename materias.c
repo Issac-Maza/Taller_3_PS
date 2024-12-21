@@ -3,12 +3,12 @@
 #include <string.h>
 #include "materias.h"
 
-// Inicialización de variables globales
+
 Materia *materias = NULL;
 int totalMaterias = 0;
 int capacidadMaterias = 0;
 
-// Inicializa las materias leyendo de un archivo
+
 void inicializarMaterias() {
     FILE *archivo = fopen("materia.txt", "r");
     if (!archivo) {
@@ -28,7 +28,7 @@ void inicializarMaterias() {
                   materias[totalMaterias].codigo, (int *)&materias[totalMaterias].estado) == 3) {
         totalMaterias++;
 
-        // Redimensionar si es necesario
+        
         if (totalMaterias >= capacidadMaterias) {
             capacidadMaterias *= 2;
             Materia *tmp = realloc(materias, capacidadMaterias * sizeof(Materia));
@@ -36,7 +36,7 @@ void inicializarMaterias() {
                 printf("Error al ampliar el arreglo de materias.\n");
                 free(materias);
                 fclose(archivo);
-                exit(EXIT_FAILURE); // Salida segura
+                exit(EXIT_FAILURE); 
             }
             materias = tmp;
         }
@@ -47,7 +47,7 @@ void inicializarMaterias() {
 }
 
 
-// Guarda las materias en un archivo
+
 void guardarMaterias() {
     FILE *archivo = fopen("materia.txt", "w");
     if (!archivo) {
@@ -63,7 +63,7 @@ void guardarMaterias() {
     printf("Materias guardadas con éxito.\n");
 }
 
-// Verifica que el código de la materia sea único
+
 bool validarCodigoUnico(const char *codigo) {
     for (int i = 0; i < totalMaterias; i++) {
         if (strcmp(materias[i].codigo, codigo) == 0) {
@@ -73,7 +73,7 @@ bool validarCodigoUnico(const char *codigo) {
     return true;
 }
 
-// Agrega una nueva materia
+
 void crearMateria() {
     Materia nuevaMateria;
 
@@ -91,14 +91,14 @@ void crearMateria() {
 
     nuevaMateria.estado = true;
 
-    // Redimensionar si es necesario
+    
     if (totalMaterias >= capacidadMaterias) {
         capacidadMaterias *= 2;
         Materia *tmp = realloc(materias, capacidadMaterias * sizeof(Materia));
         if (!tmp) {
             printf("Error al ampliar el arreglo de materias.\n");
             free(materias);
-            exit(EXIT_FAILURE); // Salida segura
+            exit(EXIT_FAILURE); 
         }
         materias = tmp;
     }
@@ -107,7 +107,7 @@ void crearMateria() {
     printf("Materia creada con éxito.\n");
 }
 
-// Edita una materia existente
+
 void editarMateria() {
     char codigo[10];
     printf("Ingrese el código de la materia que desea editar: ");
@@ -122,7 +122,7 @@ void editarMateria() {
             printf("Ingrese el nuevo estado (1 = Activo, 0 = Inactivo): ");
             scanf("%d", &nuevoEstado);
 
-            // Validar si puede inactivarse (pendiente de implementar lógica adicional)
+            
             if (nuevoEstado == 0) {
                 printf("Verificando cursos asociados... (implementación pendiente)\n");
             }
@@ -146,7 +146,7 @@ void listarMaterias() {
 }
 
 
-// Libera la memoria dinámica utilizada por el arreglo
+
 void liberarMaterias() {
     if (materias) {
         free(materias);
